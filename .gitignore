@@ -1,15 +1,23 @@
-# Dependencies
-node_modules/
+# Python
 __pycache__/
-*.pyc
-.venv/
-venv/
-
-# Build outputs
-dist/
-build/
-*.o
+*.py[cod]
+*$py.class
 *.so
+.Python
+env/
+venv/
+*.egg-info/
+
+# Lint/Format cache
+.ruff_cache/
+.mypy_cache/
+
+# 环境配置
+.env
+.env.local
+
+# 工作空间数据
+workspace/
 
 # IDE
 .vscode/
@@ -17,11 +25,14 @@ build/
 *.swp
 *.swo
 
-# Environment
-.env
-.env.local
-*.log
-
-# OS
+# 操作系统
 .DS_Store
 Thumbs.db
+
+# Docker
+*.log
+
+# Goose 状态（本地开发时使用，容器内用 volume）
+.root/
+.local/
+opencode/

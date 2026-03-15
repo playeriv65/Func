@@ -1,0 +1,66 @@
+services:
+  # Sandbox 容器 - 运行 Goose Agent
+  magic-sandbox:
+    build: .
+    container_name: magic-func-sandbox
+    restart: unless-stopped
+    environment:
+      - GOOSE_PROVIDER=openai
+      - GOOSE_MODEL=${GOOSE_MODEL:-moonshotai/kimi-k2-instruct}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_HOST=${OPENAI_HOST:-https://api.openai.com}
+      - GOOSE_DISABLE_KEYRING=1
+      - GOOSE_MODE=auto
+      - GOOSE_DISABLE_SESSION_NAMING=true
+    volumes:
+      # 文件交换目录
+      - ./workspace/input:/workspace/input
+      - ./workspace/output:/workspace/output
+      - /workspace/tmp
+      # Goose 配置
+      - ./goose-recipe.yaml:/workspace/goose-recipe.yaml:ro
+      - goose_state:/root/.local/share/goose
+      - goose_config:/root/.config/goose
+    # 启动时：创建并清理目录，然后维持运行
+    command: >
+      bash -c "
+      mkdir -p /workspace/input /workspace/output /workspace/tmp &&
+      rm -rf /workspace/input/* /workspace/output/* /workspace/tmp/* &&
+      echo 'Workspace initialized and cleaned.' &&
+      tail -f /dev/null"
+    networks:
+      - func-network
+
+  # Gateway 容器 - Flask API + 前端
+  gateway:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    container_name: magic-func-gateway
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8000}:8000"
+    environment:
+      - WORKSPACE_ROOT=/workspace
+      - SANDBOX_CONTAINER=magic-func-sandbox
+      - GOOSE_TIMEOUT=${GOOSE_TIMEOUT:-300}
+    volumes:
+      - ./workspace:/workspace
+      # 挂载 goose-recipe.yaml 供 gateway 读取
+      - ./goose-recipe.yaml:/workspace/goose-recipe.yaml:ro
+      # Docker socket 用于执行 docker exec
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - magic-sandbox
+    networks:
+      - func-network
+
+networks:
+  func-network:
+    driver: bridge
+
+volumes:
+  goose_state:
+    driver: local
+  goose_config:
+    driver: local
