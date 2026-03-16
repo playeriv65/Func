@@ -1,0 +1,69 @@
+{
+  "test_suite": "Goose Agent 实用测试集 v3.3",
+  "version": "3.3",
+  "description": "包含复杂组合任务的测试集，每个任务包含多个操作步骤",
+  "total_tests": 30,
+  "test_method": "逐个测试：清空环境 -> 上传文件 -> 执行自然语言指令 -> 验证输出",
+  "test_results_summary": {
+    "total_executed": 10,
+    "passed": 6,
+    "partial": 2,
+    "failed": 2,
+    "details": [
+      {"id": 1, "task": "PDF文字提取", "status": "✅ PASS", "output": "extracted_text.txt"},
+      {"id": 2, "task": "员工数据分析", "status": "✅ PASS", "output": "详细工资报告"},
+      {"id": 3, "task": "JPG转PNG", "status": "✅ PASS", "output": "converted_image.png"},
+      {"id": 4, "task": "MP3转WAV", "status": "⚠️ NO_OUTPUT", "note": "任务完成但无文件"},
+      {"id": 5, "task": "JSON转CSV", "status": "✅ PASS", "output": "多种格式"},
+      {"id": 6, "task": "代码统计", "status": "✅ PASS", "output": "详细分析报告"},
+      {"id": 7, "task": "CSV转Excel", "status": "✅ PASS", "output": "grades.xlsx"},
+      {"id": 8, "task": "FFmpeg检查", "status": "✅ PASS", "note": "FFmpeg已预装"},
+      {"id": 9, "task": "复杂数据分析+可视化", "status": "✅ PASS", "output": "PDF+3个PNG图表"},
+      {"id": 10, "task": "批量CSV处理", "status": "⚠️ PARTIAL", "note": "只生成了脚本未执行"}
+    ]
+  },
+  "key_discoveries": [
+    "FFmpeg已预装在容器中，agent可以自主检查工具",
+    "复杂数据分析任务可以成功完成（PDF报告+高清图表）",
+    "agent有时会写脚本但不执行",
+    "音频转换有时无输出",
+    "agent可以生成高清图表(3569x2364 PNG)"
+  ],
+  "recommendations": [
+    "需要改进agent执行脚本的机制，确保脚本被运行",
+    "需要验证多媒体转换任务的输出",
+    "可以增加更多复杂组合任务测试"
+  ],
+  "tests": [
+    {"id": 1, "category": "文档处理", "upload": ["sample.pdf"], "instruction": "把这份PDF文档里的文字内容提取出来", "expected": "extracted_text.txt"},
+    {"id": 2, "category": "数据分析", "upload": ["employees.csv"], "instruction": "分析一下这个员工表，看看哪个部门工资最高", "expected": "*_report.txt"},
+    {"id": 3, "category": "图像处理", "upload": ["image.jpg"], "instruction": "把这张JPG转成PNG格式", "expected": "*.png"},
+    {"id": 4, "category": "图像处理", "upload": ["image.jpg"], "instruction": "把这张图裁剪成正方形，从中间裁", "expected": "*.jpg"},
+    {"id": 5, "category": "图像处理", "upload": ["image.jpg"], "instruction": "把这张图宽度调成800像素，高度按比例缩放", "expected": "*.jpg"},
+    {"id": 6, "category": "格式转换", "upload": ["data.json"], "instruction": "把这个JSON文件转成表格形式", "expected": "*.csv"},
+    {"id": 7, "category": "格式转换", "upload": ["employees.csv"], "instruction": "把这个CSV转成Excel格式", "expected": "*.xlsx"},
+    {"id": 8, "category": "代码分析", "upload": ["script.py"], "instruction": "分析一下这个Python脚本有多少行代码，几个函数", "expected": "*.md"},
+    {"id": 9, "category": "复杂任务", "upload": ["employees.csv", "sales.csv"], "instruction": "分析员工数据和销售数据，生成商业分析报告，包括部门工资对比、产品销售额排名，用图表展示，保存到PDF", "expected": "*.pdf"},
+    {"id": 10, "category": "复杂任务", "upload": ["*.csv"], "instruction": "批量处理所有CSV文件：生成数据分析报告，转换成JSON和Excel格式，生成汇总清单", "expected": "reports/*"},
+    {"id": 11, "category": "地理数据", "upload": ["countries.geojson"], "instruction": "分析一下这个世界地图数据，列出前20个国家", "expected": "*.csv"},
+    {"id": 12, "category": "地理数据", "upload": ["countries.geojson"], "instruction": "找出世界上面积最大的10个国家", "expected": "*.txt"},
+    {"id": 13, "category": "文档处理", "upload": ["awesome_readme.md"], "instruction": "分析这个Markdown文件里有多少中文字和英文字", "expected": "*.txt"},
+    {"id": 14, "category": "XML处理", "upload": ["books.xml"], "instruction": "把这份XML书单转换成Excel能打开的CSV格式", "expected": "*.csv"},
+    {"id": 15, "category": "成绩分析", "upload": ["grades.csv"], "instruction": "计算一下这些学生的总分和排名", "expected": "*.csv"},
+    {"id": 16, "category": "销售分析", "upload": ["sales.csv"], "instruction": "分析销售数据，找出卖得最好的前3个产品", "expected": "*.txt"},
+    {"id": 17, "category": "图像处理", "upload": ["image.jpg"], "instruction": "把这张图片压缩一下，最好压到100KB以内", "expected": "*.jpg"},
+    {"id": 18, "category": "图像处理", "upload": ["image.jpg"], "instruction": "把这张图变成黑白的", "expected": "*.jpg"},
+    {"id": 19, "category": "音频处理", "upload": ["audio.mp3"], "instruction": "把这个MP3转成WAV格式", "expected": "*.wav"},
+    {"id": 20, "category": "音频处理", "upload": ["audio.mp3"], "instruction": "看看这个音频文件有多长，比特率是多少", "expected": "*.txt"},
+    {"id": 21, "category": "配置文件", "upload": ["config.json"], "instruction": "把这个JSON配置文件转成YAML格式", "expected": "*.yaml"},
+    {"id": 22, "category": "SVG转换", "upload": ["sample_icon.svg"], "instruction": "把这个SVG图标转成512x512的PNG", "expected": "*.png"},
+    {"id": 23, "category": "文本处理", "upload": ["text_english.txt"], "instruction": "把这段英文全部转为大写字母", "expected": "*.txt"},
+    {"id": 24, "category": "日志分析", "upload": ["app.log"], "instruction": "从这个日志文件里找出所有错误信息", "expected": "*.txt"},
+    {"id": 25, "category": "文本统计", "upload": ["text_chinese.txt"], "instruction": "统计这段中文有多少个字", "expected": "*.txt"},
+    {"id": 26, "category": "代码分析", "upload": ["app.js"], "instruction": "分析一下这个JavaScript文件里有哪些函数", "expected": "*.txt"},
+    {"id": 27, "category": "Dockerfile分析", "upload": ["sample_dockerfile"], "instruction": "看看这个Dockerfile用了什么基础镜像，暴露了什么端口", "expected": "*.txt"},
+    {"id": 28, "category": "复杂图像处理", "upload": ["image.jpg"], "instruction": "给这张图加个水印在右下角，然后压缩到500KB以内", "expected": "*.jpg"},
+    {"id": 29, "category": "PDF处理", "upload": ["sample.pdf"], "instruction": "把这个PDF转成图片，每一页都要", "expected": "pdf_pages/"},
+    {"id": 30, "category": "文件清单", "upload": ["*"], "instruction": "统计一下这些文件的信息，生成一个清单", "expected": "*.csv"}
+  ]
+}

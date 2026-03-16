@@ -1,0 +1,545 @@
+{
+  "test_suite": "格式转换综合测试集",
+  "version": "1.0",
+  "description": "基于真实使用场景的格式转换测试，涵盖图片、文档、CAD、GIS、音视频等多种格式",
+  "tools_required": {
+    "image": ["ImageMagick", "Pillow", "libvips"],
+    "document": ["Pandoc", "LibreOffice", "Poppler", "markitdown"],
+    "cad": ["FreeCAD", "OpenCASCADE", "meshlab"],
+    "gis": ["GDAL/OGR", "ogr2ogr"],
+    "audio_video": ["FFmpeg", "HandBrake CLI"]
+  },
+  "tests": [
+    {
+      "category": "图片格式转换",
+      "description": "测试各种图片格式之间的转换，支持Web开发、印刷、UI设计等场景",
+      "cases": [
+        {
+          "id": "img_001",
+          "name": "JPG转PNG",
+          "upload": ["image.jpg"],
+          "instruction": "把这个JPG图片转换成PNG格式，保持原始尺寸",
+          "expected_output": "*.png",
+          "tool": "ImageMagick/Pillow",
+          "scenario": "Web开发需要透明背景"
+        },
+        {
+          "id": "img_002",
+          "name": "PNG转JPG压缩",
+          "upload": ["image.png"],
+          "instruction": "把这个PNG转换成JPG，质量设为85%，减小文件大小",
+          "expected_output": "*.jpg",
+          "tool": "ImageMagick",
+          "scenario": "网页加载优化"
+        },
+        {
+          "id": "img_003",
+          "name": "SVG转PNG",
+          "upload": ["format_conversion/icon.svg"],
+          "instruction": "把这个SVG图标转换成512x512像素的PNG图片",
+          "expected_output": "*.png",
+          "tool": "ImageMagick/rsvg-convert",
+          "scenario": "图标导出用于App"
+        },
+        {
+          "id": "img_004",
+          "name": "图片转WebP",
+          "upload": ["image.jpg"],
+          "instruction": "把这个图片转换成WebP格式，用于网页优化",
+          "expected_output": "*.webp",
+          "tool": "ImageMagick/FFmpeg",
+          "scenario": "现代Web格式优化"
+        },
+        {
+          "id": "img_005",
+          "name": "批量图片格式转换",
+          "upload": ["image.jpg", "image.png"],
+          "instruction": "把所有图片都转换成WebP格式，保持原文件名",
+          "expected_output": "*.webp",
+          "tool": "ImageMagick",
+          "scenario": "网站图片批量优化"
+        },
+        {
+          "id": "img_006",
+          "name": "图片转ICO图标",
+          "upload": ["image.png"],
+          "instruction": "把这个图片转换成favicon.ico格式，尺寸16x16和32x32",
+          "expected_output": "*.ico",
+          "tool": "ImageMagick",
+          "scenario": "网站favicon制作"
+        },
+        {
+          "id": "img_007",
+          "name": "图片转TIFF印刷",
+          "upload": ["image.jpg"],
+          "instruction": "把这个图片转换成TIFF格式，用于印刷，CMYK色彩模式",
+          "expected_output": "*.tiff",
+          "tool": "ImageMagick",
+          "scenario": "印刷行业需求"
+        },
+        {
+          "id": "img_008",
+          "name": "图片转BMP",
+          "upload": ["image.png"],
+          "instruction": "把这个PNG转换成24位BMP格式",
+          "expected_output": "*.bmp",
+          "tool": "ImageMagick",
+          "scenario": "嵌入式系统/老软件兼容"
+        }
+      ]
+    },
+    {
+      "category": "文档格式转换",
+      "description": "测试办公文档、技术文档等格式转换，支持企业文档管理场景",
+      "cases": [
+        {
+          "id": "doc_001",
+          "name": "Markdown转HTML",
+          "upload": ["format_conversion/document.md"],
+          "instruction": "把这个Markdown文档转换成HTML网页，带基本样式",
+          "expected_output": "*.html",
+          "tool": "Pandoc",
+          "scenario": "博客文章发布"
+        },
+        {
+          "id": "doc_002",
+          "name": "Markdown转PDF",
+          "upload": ["format_conversion/document.md"],
+          "instruction": "把这个Markdown文档转换成PDF格式",
+          "expected_output": "*.pdf",
+          "tool": "Pandoc/wkhtmltopdf",
+          "scenario": "文档归档"
+        },
+        {
+          "id": "doc_003",
+          "name": "HTML转Markdown",
+          "upload": ["format_conversion/article.html"],
+          "instruction": "把这个HTML网页转换成Markdown格式",
+          "expected_output": "*.md",
+          "tool": "Pandoc",
+          "scenario": "网页内容提取"
+        },
+        {
+          "id": "doc_004",
+          "name": "HTML转PDF",
+          "upload": ["format_conversion/article.html"],
+          "instruction": "把这个HTML转换成PDF文档",
+          "expected_output": "*.pdf",
+          "tool": "wkhtmltopdf/weasyprint",
+          "scenario": "网页打印/存档"
+        },
+        {
+          "id": "doc_005",
+          "name": "JSON转YAML",
+          "upload": ["format_conversion/config.yaml"],
+          "instruction": "把这个YAML配置文件转换成JSON格式",
+          "expected_output": "*.json",
+          "tool": "Python/yq",
+          "scenario": "配置格式迁移"
+        },
+        {
+          "id": "doc_006",
+          "name": "YAML转JSON",
+          "upload": ["config.json"],
+          "instruction": "把这个JSON配置文件转换成YAML格式",
+          "expected_output": "*.yaml",
+          "tool": "Python/yq",
+          "scenario": "K8s配置编写"
+        },
+        {
+          "id": "doc_007",
+          "name": "CSV转JSON",
+          "upload": ["employees.csv"],
+          "instruction": "把这个CSV数据文件转换成JSON数组格式",
+          "expected_output": "*.json",
+          "tool": "Python/csvkit",
+          "scenario": "API数据准备"
+        },
+        {
+          "id": "doc_008",
+          "name": "XML转JSON",
+          "upload": ["books.xml"],
+          "instruction": "把这个XML文件转换成JSON格式",
+          "expected_output": "*.json",
+          "tool": "Python/xmltodict",
+          "scenario": "数据迁移"
+        },
+        {
+          "id": "doc_009",
+          "name": "RTF转TXT",
+          "upload": ["format_conversion/simple.rtf"],
+          "instruction": "把这个RTF文档转换成纯文本格式",
+          "expected_output": "*.txt",
+          "tool": "unrtf/catdoc",
+          "scenario": "老文档提取文字"
+        },
+        {
+          "id": "doc_010",
+          "name": "PDF转图片",
+          "upload": ["sample.pdf"],
+          "instruction": "把这个PDF的每一页都转换成JPG图片",
+          "expected_output": "*.jpg",
+          "tool": "pdftoppm/ImageMagick",
+          "scenario": "PDF预览图生成"
+        }
+      ]
+    },
+    {
+      "category": "GIS地理数据转换",
+      "description": "测试地理信息数据格式转换，支持地图开发、导航应用等场景",
+      "cases": [
+        {
+          "id": "gis_001",
+          "name": "KML转GeoJSON",
+          "upload": ["format_conversion/places.kml"],
+          "instruction": "把这个KML文件转换成GeoJSON格式",
+          "expected_output": "*.geojson",
+          "tool": "GDAL/ogr2ogr",
+          "scenario": "Google Earth数据导入Web地图"
+        },
+        {
+          "id": "gis_002",
+          "name": "GeoJSON转KML",
+          "upload": ["countries.geojson"],
+          "instruction": "把这个GeoJSON文件转换成KML格式，用于Google Earth",
+          "expected_output": "*.kml",
+          "tool": "GDAL/ogr2ogr",
+          "scenario": "数据导出到Google Earth"
+        },
+        {
+          "id": "gis_003",
+          "name": "GPX转GeoJSON",
+          "upload": ["format_conversion/track.gpx"],
+          "instruction": "把这个GPS轨迹文件转换成GeoJSON格式",
+          "expected_output": "*.geojson",
+          "tool": "GDAL/ogr2ogr",
+          "scenario": "GPS数据导入地图应用"
+        },
+        {
+          "id": "gis_004",
+          "name": "GeoJSON转GPX",
+          "upload": ["countries.geojson"],
+          "instruction": "从GeoJSON提取点数据，转换成GPX航点格式",
+          "expected_output": "*.gpx",
+          "tool": "GDAL/ogr2ogr",
+          "scenario": "导航设备导入"
+        },
+        {
+          "id": "gis_005",
+          "name": "GeoJSON属性提取",
+          "upload": ["countries.geojson"],
+          "instruction": "从GeoJSON提取所有国家名称和坐标，保存成CSV",
+          "expected_output": "*.csv",
+          "tool": "Python/GDAL",
+          "scenario": "地理数据分析"
+        },
+        {
+          "id": "gis_006",
+          "name": "坐标格式转换",
+          "upload": ["format_conversion/places.kml"],
+          "instruction": "从KML提取坐标，转换成WKT格式保存",
+          "expected_output": "*.wkt",
+          "tool": "GDAL",
+          "scenario": "GIS数据库导入"
+        }
+      ]
+    },
+    {
+      "category": "CAD/3D模型转换",
+      "description": "测试CAD和3D模型格式转换，支持工程制造、3D打印等场景",
+      "cases": [
+        {
+          "id": "cad_001",
+          "name": "STL转OBJ",
+          "upload": ["cube.stl"],
+          "instruction": "把这个STL模型文件转换成OBJ格式",
+          "expected_output": "*.obj",
+          "tool": "meshlab/assimp",
+          "scenario": "3D打印模型格式转换"
+        },
+        {
+          "id": "cad_002",
+          "name": "OBJ转STL",
+          "upload": ["model_bunny.ply"],
+          "instruction": "把这个PLY模型转换成STL格式",
+          "expected_output": "*.stl",
+          "tool": "meshlab/assimp",
+          "scenario": "3D打印准备"
+        },
+        {
+          "id": "cad_003",
+          "name": "DXF转SVG",
+          "upload": ["format_conversion/simple.dxf"],
+          "instruction": "把这个DXF CAD文件转换成SVG矢量图",
+          "expected_output": "*.svg",
+          "tool": "FreeCAD/qcad",
+          "scenario": "CAD图纸网页展示"
+        },
+        {
+          "id": "cad_004",
+          "name": "3D模型信息提取",
+          "upload": ["cube.stl"],
+          "instruction": "分析这个STL文件，提取顶点数、面数、体积等信息，保存到TXT",
+          "expected_output": "*.txt",
+          "tool": "Python/trimesh",
+          "scenario": "3D打印材料估算"
+        },
+        {
+          "id": "cad_005",
+          "name": "PLY转STL",
+          "upload": ["model_bunny.ply"],
+          "instruction": "把这个PLY文件转换成STL格式",
+          "expected_output": "*.stl",
+          "tool": "meshlab/trimesh",
+          "scenario": "扫描模型转打印格式"
+        }
+      ]
+    },
+    {
+      "category": "音视频格式转换",
+      "description": "测试音频视频格式转换，支持媒体处理、内容创作等场景",
+      "cases": [
+        {
+          "id": "av_001",
+          "name": "MP3转WAV",
+          "upload": ["audio.mp3"],
+          "instruction": "把这个MP3音频转换成WAV无损格式",
+          "expected_output": "*.wav",
+          "tool": "FFmpeg",
+          "scenario": "音频编辑需求"
+        },
+        {
+          "id": "av_002",
+          "name": "WAV转MP3",
+          "upload": ["audio.mp3"],
+          "instruction": "把这个音频转换成128kbps的MP3格式",
+          "expected_output": "*.mp3",
+          "tool": "FFmpeg",
+          "scenario": "音频文件压缩"
+        },
+        {
+          "id": "av_003",
+          "name": "音频转OGG",
+          "upload": ["audio.mp3"],
+          "instruction": "把这个MP3转换成OGG格式",
+          "expected_output": "*.ogg",
+          "tool": "FFmpeg",
+          "scenario": "Web游戏音频"
+        },
+        {
+          "id": "av_004",
+          "name": "音频转FLAC",
+          "upload": ["audio.mp3"],
+          "instruction": "把这个音频转换成FLAC无损格式",
+          "expected_output": "*.flac",
+          "tool": "FFmpeg",
+          "scenario": "音乐归档"
+        },
+        {
+          "id": "av_005",
+          "name": "视频转GIF",
+          "upload": ["video.mp4"],
+          "instruction": "从这个视频中提取前5秒，转换成GIF动图，宽度480像素",
+          "expected_output": "*.gif",
+          "tool": "FFmpeg",
+          "scenario": "视频预览GIF"
+        },
+        {
+          "id": "av_006",
+          "name": "视频转WebM",
+          "upload": ["video.mp4"],
+          "instruction": "把这个MP4视频转换成WebM格式，用于网页嵌入",
+          "expected_output": "*.webm",
+          "tool": "FFmpeg",
+          "scenario": "Web视频优化"
+        },
+        {
+          "id": "av_007",
+          "name": "视频提取音频",
+          "upload": ["video.mp4"],
+          "instruction": "从这个视频中提取音频轨道，保存为MP3格式",
+          "expected_output": "*.mp3",
+          "tool": "FFmpeg",
+          "scenario": "视频配乐提取"
+        },
+        {
+          "id": "av_008",
+          "name": "视频压缩",
+          "upload": ["video.mp4"],
+          "instruction": "压缩这个视频，输出文件大小控制在原文件的50%以内",
+          "expected_output": "*.mp4",
+          "tool": "FFmpeg",
+          "scenario": "视频存储优化"
+        }
+      ]
+    },
+    {
+      "category": "数据格式转换",
+      "description": "测试数据文件格式转换，支持数据分析、系统集成等场景",
+      "cases": [
+        {
+          "id": "data_001",
+          "name": "CSV转Excel",
+          "upload": ["employees.csv"],
+          "instruction": "把这个CSV文件转换成Excel格式",
+          "expected_output": "*.xlsx",
+          "tool": "Python/openpyxl",
+          "scenario": "数据分析导入Excel"
+        },
+        {
+          "id": "data_002",
+          "name": "Excel转CSV",
+          "upload": ["sample.xlsx"],
+          "instruction": "把这个Excel文件转换成CSV格式",
+          "expected_output": "*.csv",
+          "tool": "Python/pandas",
+          "scenario": "数据导入数据库"
+        },
+        {
+          "id": "data_003",
+          "name": "JSON转CSV嵌套展开",
+          "upload": ["nested.json"],
+          "instruction": "把这个嵌套的JSON文件展开成扁平的CSV表格",
+          "expected_output": "*.csv",
+          "tool": "Python/pandas",
+          "scenario": "API数据处理"
+        },
+        {
+          "id": "data_004",
+          "name": "CSV转XML",
+          "upload": ["employees.csv"],
+          "instruction": "把这个CSV数据转换成XML格式",
+          "expected_output": "*.xml",
+          "tool": "Python",
+          "scenario": "遗留系统集成"
+        },
+        {
+          "id": "data_005",
+          "name": "数据格式批量转换",
+          "upload": ["employees.csv", "sales.csv", "grades.csv"],
+          "instruction": "把所有CSV文件都转换成JSON格式，保持原文件名",
+          "expected_output": "*.json",
+          "tool": "Python",
+          "scenario": "数据迁移批量处理"
+        }
+      ]
+    },
+    {
+      "category": "复杂组合任务",
+      "description": "测试真实场景中的多步骤组合任务",
+      "cases": [
+        {
+          "id": "complex_001",
+          "name": "图片水印+格式转换",
+          "upload": ["image.jpg"],
+          "instruction": "给这张图片添加水印文字'Sample'在右下角，然后转换成PNG格式",
+          "expected_output": "*.png",
+          "tool": "ImageMagick",
+          "scenario": "图片版权保护"
+        },
+        {
+          "id": "complex_002",
+          "name": "图片批量处理",
+          "upload": ["image.jpg", "image.png"],
+          "instruction": "把所有图片调整到宽度800像素，转换为WebP格式，并生成处理报告",
+          "expected_output": ["*.webp", "*report*"],
+          "tool": "ImageMagick",
+          "scenario": "网站图片优化流水线"
+        },
+        {
+          "id": "complex_003",
+          "name": "数据分析+报告生成",
+          "upload": ["employees.csv", "sales.csv"],
+          "instruction": "分析员工和销售数据，生成包含图表的HTML报告，并转换成PDF",
+          "expected_output": "*.pdf",
+          "tool": "Python/Matplotlib/wkhtmltopdf",
+          "scenario": "业务报告自动化"
+        },
+        {
+          "id": "complex_004",
+          "name": "多格式数据合并",
+          "upload": ["employees.csv", "data.json", "books.xml"],
+          "instruction": "把CSV、JSON、XML三种格式的数据合并成一个统一的JSON文件",
+          "expected_output": "*.json",
+          "tool": "Python",
+          "scenario": "多源数据整合"
+        },
+        {
+          "id": "complex_005",
+          "name": "文档转换流水线",
+          "upload": ["format_conversion/document.md"],
+          "instruction": "把这个Markdown文档转换成HTML、PDF和Word三种格式",
+          "expected_output": ["*.html", "*.pdf", "*.docx"],
+          "tool": "Pandoc",
+          "scenario": "多格式文档发布"
+        },
+        {
+          "id": "complex_006",
+          "name": "GIS数据处理",
+          "upload": ["format_conversion/places.kml", "format_conversion/track.gpx"],
+          "instruction": "把KML和GPX数据合并，转换成GeoJSON，并在地图上标注点位信息",
+          "expected_output": "*.geojson",
+          "tool": "GDAL/Python",
+          "scenario": "地理数据整合"
+        }
+      ]
+    },
+    {
+      "category": "工具安装测试",
+      "description": "测试Agent自主安装所需工具的能力",
+      "cases": [
+        {
+          "id": "tool_001",
+          "name": "安装ImageMagick并转换图片",
+          "upload": ["image.jpg"],
+          "instruction": "检查系统是否有ImageMagick，如果没有就安装，然后把JPG转换成PNG",
+          "expected_output": "*.png",
+          "tool": "apt/ImageMagick",
+          "scenario": "首次运行环境准备"
+        },
+        {
+          "id": "tool_002",
+          "name": "安装FFmpeg并转换音频",
+          "upload": ["audio.mp3"],
+          "instruction": "检查ffmpeg是否安装，如果没有就安装，然后把MP3转换成WAV",
+          "expected_output": "*.wav",
+          "tool": "apt/FFmpeg",
+          "scenario": "音视频处理环境准备"
+        },
+        {
+          "id": "tool_003",
+          "name": "安装GDAL并转换GIS数据",
+          "upload": ["format_conversion/places.kml"],
+          "instruction": "检查gdal是否安装，如果没有就安装gdal-bin，然后把KML转换成GeoJSON",
+          "expected_output": "*.geojson",
+          "tool": "apt/gdal-bin",
+          "scenario": "GIS处理环境准备"
+        },
+        {
+          "id": "tool_004",
+          "name": "安装Pandoc并转换文档",
+          "upload": ["format_conversion/document.md"],
+          "instruction": "检查pandoc是否安装，如果没有就安装，然后把Markdown转换成HTML",
+          "expected_output": "*.html",
+          "tool": "apt/pandoc",
+          "scenario": "文档处理环境准备"
+        },
+        {
+          "id": "tool_005",
+          "name": "安装Python库处理数据",
+          "upload": ["employees.csv"],
+          "instruction": "检查pandas是否安装，如果没有就用pip安装，然后分析CSV数据",
+          "expected_output": "*",
+          "tool": "pip/pandas",
+          "scenario": "Python数据处理环境"
+        }
+      ]
+    }
+  ],
+  "execution_notes": {
+    "setup": "每个测试前清空output目录",
+    "timeout": "每个测试最多5分钟",
+    "verification": "检查output目录是否有预期文件",
+    "log_capture": "记录完整执行日志用于分析"
+  }
+}

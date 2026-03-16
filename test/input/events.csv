@@ -1,0 +1,6 @@
+user_id,event_type,timestamp,page,duration
+1001,page_view,2024-01-15T10:00:00Z,/home,30
+1001,click,2024-01-15T10:00:30Z,/products,5
+1002,page_view,2024-01-15T10:01:00Z/home,45
+1002,purchase,2024-01-15T10:01:45Z/checkout,120
+1003,page_view,2024-01-15T10:02:00Z/blog,60

@@ -1,0 +1,119 @@
+{
+  "timestamp": "2026-03-15T21:54:08.880470",
+  "total": 10,
+  "passed": 9,
+  "results": [
+    {
+      "id": "doc_001",
+      "name": "Markdown转HTML",
+      "category": "文档格式转换",
+      "status": "passed",
+      "output_files": [
+        "index.html"
+      ],
+      "duration": 42.1,
+      "notes": "找到文件: index.html"
+    },
+    {
+      "id": "doc_002",
+      "name": "Markdown转PDF",
+      "category": "文档格式转换",
+      "status": "passed",
+      "output_files": [
+        "document.pdf"
+      ],
+      "duration": 146.3,
+      "notes": "找到文件: document.pdf"
+    },
+    {
+      "id": "doc_003",
+      "name": "HTML转Markdown",
+      "category": "文档格式转换",
+      "status": "passed",
+      "output_files": [
+        "converted_article.md"
+      ],
+      "duration": 30.1,
+      "notes": "找到文件: converted_article.md"
+    },
+    {
+      "id": "doc_004",
+      "name": "HTML转PDF",
+      "category": "文档格式转换",
+      "status": "failed",
+      "output_files": [],
+      "duration": 10.0,
+      "notes": "输出目录为空"
+    },
+    {
+      "id": "doc_005",
+      "name": "JSON转YAML",
+      "category": "文档格式转换",
+      "status": "passed",
+      "output_files": [
+        "convert_yaml_to_json.py",
+        "config.json"
+      ],
+      "duration": 18.0,
+      "notes": "找到文件: config.json"
+    },
+    {
+      "id": "doc_006",
+      "name": "YAML转JSON",
+      "category": "文档格式转换",
+      "status": "passed",
+      "output_files": [
+        "config.yaml"
+      ],
+      "duration": 14.0,
+      "notes": "找到文件: config.yaml"
+    },
+    {
+      "id": "doc_007",
+      "name": "CSV转JSON",
+      "category": "文档格式转换",
+      "status": "passed",
+      "output_files": [
+        "employees.json"
+      ],
+      "duration": 16.0,
+      "notes": "找到文件: employees.json"
+    },
+    {
+      "id": "doc_008",
+      "name": "XML转JSON",
+      "category": "文档格式转换",
+      "status": "passed",
+      "output_files": [
+        "conversion_report.md",
+        "result.json"
+      ],
+      "duration": 26.1,
+      "notes": "找到文件: result.json"
+    },
+    {
+      "id": "doc_009",
+      "name": "RTF转TXT",
+      "category": "文档格式转换",
+      "status": "passed",
+      "output_files": [
+        "simple.txt"
+      ],
+      "duration": 26.1,
+      "notes": "找到文件: simple.txt"
+    },
+    {
+      "id": "doc_010",
+      "name": "PDF转图片",
+      "category": "文档格式转换",
+      "status": "passed",
+      "output_files": [
+        "sample.pdf",
+        "README.md",
+        "page-1.jpg"
+      ],
+      "duration": 24.1,
+      "notes": "找到文件: page-1.jpg"
+    }
+  ]
+}

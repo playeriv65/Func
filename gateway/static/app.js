@@ -4,23 +4,50 @@ let pollingInterval = null;
 let currentTheme = 'auto';
 let isComplexMode = false;
 
+// Initialize
+if (typeof lucide !== 'undefined') lucide.createIcons();
+initTheme();
+loadInputFiles();
+loadOutputFiles();
+
 // Mode switching
 function toggleMode() {
     isComplexMode = !isComplexMode;
-    
+
     const modeSwitch = document.getElementById('modeSwitch');
+    const modeToggle = document.getElementById('modeToggle');
+    const modeToggleDot = document.getElementById('modeToggleDot');
     const centerPanel = document.getElementById('centerPanel');
-    const instructionInput = document.getElementById('instruction');
-    const chatInstruction = document.getElementById('chatInstruction');
-    
+    const simplePanel = document.getElementById('simplePanel');
+    const chatMessages = document.getElementById('chatMessages');
+    const chatInputContainer = document.getElementById('chatInputContainer');
+
     if (isComplexMode) {
         modeSwitch.classList.add('active');
-        centerPanel.classList.add('complex-mode');
-        if (chatInstruction) chatInstruction.focus();
+        modeToggle.classList.add('bg-blue-500');
+        modeToggle.classList.remove('bg-gray-400', 'dark:bg-gray-600');
+        modeToggleDot.classList.add('translate-x-4');
+
+        simplePanel.classList.add('hidden');
+        chatMessages.classList.remove('hidden');
+        chatMessages.classList.add('flex');
+        chatInputContainer.classList.remove('hidden');
+        chatInputContainer.classList.add('block');
+
+        document.getElementById('chatInstruction').focus();
     } else {
         modeSwitch.classList.remove('active');
-        centerPanel.classList.remove('complex-mode');
-        if (instructionInput) instructionInput.focus();
+        modeToggle.classList.remove('bg-blue-500');
+        modeToggle.classList.add('bg-gray-400', 'dark:bg-gray-600');
+        modeToggleDot.classList.remove('translate-x-4');
+
+        simplePanel.classList.remove('hidden');
+        chatMessages.classList.add('hidden');
+        chatMessages.classList.remove('flex');
+        chatInputContainer.classList.add('hidden');
+        chatInputContainer.classList.remove('block');
+
+        document.getElementById('instruction').focus();
     }
 }
 
@@ -33,39 +60,26 @@ function initTheme() {
 
 function applyTheme() {
     const html = document.documentElement;
-    const sunIcon = document.querySelector('.sun-icon');
-    const sunRays = document.querySelector('.sun-rays');
-    const moonIcon = document.querySelector('.moon-icon');
     const themeText = document.getElementById('themeText');
-    
+
     html.removeAttribute('data-theme');
-    
+    html.classList.remove('dark');
+
     if (currentTheme === 'light') {
         html.setAttribute('data-theme', 'light');
-        sunIcon.style.display = 'none';
-        sunRays.style.display = 'none';
-        moonIcon.style.display = 'block';
         themeText.textContent = '浅色';
     } else if (currentTheme === 'dark') {
         html.setAttribute('data-theme', 'dark');
-        sunIcon.style.display = 'block';
-        sunRays.style.display = 'block';
-        moonIcon.style.display = 'none';
+        html.classList.add('dark');
         themeText.textContent = '深色';
     } else {
         const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         if (isDark) {
-            sunIcon.style.display = 'block';
-            sunRays.style.display = 'block';
-            moonIcon.style.display = 'none';
-        } else {
-            sunIcon.style.display = 'none';
-            sunRays.style.display = 'none';
-            moonIcon.style.display = 'block';
+            html.classList.add('dark');
         }
         themeText.textContent = '自动';
     }
-    
+
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
@@ -81,19 +95,24 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e)
     if (currentTheme === 'auto') applyTheme();
 });
 
-if (typeof lucide !== 'undefined') lucide.createIcons();
-initTheme();
-
 // Upload handling
 const uploadZone = document.getElementById('uploadZone');
 const fileInput = document.getElementById('fileInput');
 
 uploadZone.addEventListener('click', () => fileInput.click());
-uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('dragover'); });
-uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+uploadZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadZone.classList.add('border-blue-500', 'bg-blue-50', 'dark:bg-blue-900/10');
+    uploadZone.classList.remove('border-gray-300', 'dark:border-gray-700', 'bg-gray-50', 'dark:bg-gray-900');
+});
+uploadZone.addEventListener('dragleave', () => {
+    uploadZone.classList.remove('border-blue-500', 'bg-blue-50', 'dark:bg-blue-900/10');
+    uploadZone.classList.add('border-gray-300', 'dark:border-gray-700', 'bg-gray-50', 'dark:bg-gray-900');
+});
 uploadZone.addEventListener('drop', (e) => {
     e.preventDefault();
-    uploadZone.classList.remove('dragover');
+    uploadZone.classList.remove('border-blue-500', 'bg-blue-50', 'dark:bg-blue-900/10');
+    uploadZone.classList.add('border-gray-300', 'dark:border-gray-700', 'bg-gray-50', 'dark:bg-gray-900');
     handleFiles(e.dataTransfer.files);
 });
 fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
@@ -110,7 +129,10 @@ async function uploadFile(file) {
     try {
         const response = await fetch(`${API_BASE}/api/files/upload`, { method: 'POST', body: formData });
         return response.ok;
-    } catch (error) { console.error('Upload error:', error); return false; }
+    } catch (error) {
+        console.error('Upload error:', error);
+        return false;
+    }
 }
 
 async function loadInputFiles() {
@@ -119,26 +141,29 @@ async function loadInputFiles() {
         const data = await response.json();
         const fileList = document.getElementById('inputFileList');
         const fileCount = document.getElementById('fileCount');
-        
+
         fileCount.textContent = data.files.length;
-        
+
         if (data.files.length === 0) {
-            fileList.innerHTML = '<div class="empty-state">暂无输入文件</div>';
+            fileList.innerHTML = `
+                <div class="text-center text-gray-400 dark:text-gray-500 py-8">
+                    <div class="text-sm">暂无输入文件</div>
+                </div>`;
             return;
         }
-        
+
         fileList.innerHTML = '';
         data.files.forEach(filename => {
             const item = document.createElement('div');
-            item.className = 'file-item';
+            item.className = 'flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm transition-all duration-150 hover:bg-gray-100 dark:hover:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600';
             item.innerHTML = `
-                <svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg class="w-4 h-4 text-gray-400 dark:text-gray-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                     <polyline points="14 2 14 8 20 8"/>
                 </svg>
-                <span class="file-name">${escapeHtml(filename)}</span>
-                <button class="btn btn-icon btn-sm" onclick="deleteInputFile('${escapeHtml(filename)}')" title="删除">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <span class="flex-1 break-all text-gray-700 dark:text-gray-300 font-medium text-xs">${escapeHtml(filename)}</span>
+                <button onclick="deleteInputFile('${escapeHtml(filename)}')" class="p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-500 transition-colors duration-150" title="删除">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="3 6 5 6 21 6"/>
                         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
                     </svg>
@@ -146,7 +171,9 @@ async function loadInputFiles() {
             `;
             fileList.appendChild(item);
         });
-    } catch (error) { console.error('Error loading input files:', error); }
+    } catch (error) {
+        console.error('Error loading input files:', error);
+    }
 }
 
 async function deleteInputFile(filename) {
@@ -156,104 +183,120 @@ async function deleteInputFile(filename) {
             await loadInputFiles();
             showToast('success', `已删除：${filename}`);
         }
-    } catch (error) { console.error('Error deleting file:', error); }
+    } catch (error) {
+        console.error('Error deleting file:', error);
+    }
 }
 
 async function deleteOutputFile(filename) {
     if (!confirm(`确定要删除 ${filename} 吗？`)) return;
-    
+
     try {
         const response = await fetch(`${API_BASE}/api/files/output/${filename}`, { method: 'DELETE' });
         if (response.ok) {
             await loadOutputFiles();
             showToast('success', `已删除：${filename}`);
         }
-    } catch (error) { console.error('Error deleting file:', error); }
+    } catch (error) {
+        console.error('Error deleting file:', error);
+    }
 }
 
 // Toast notification
 function showToast(type, message) {
     const toast = document.getElementById('toast');
     const toastMessage = document.getElementById('toastMessage');
-    const toastIcon = toast.querySelector('.toast-icon');
-    
-    // Set icon based on type
+    const toastIcon = document.getElementById('toastIcon');
+
     if (type === 'success') {
         toastIcon.innerHTML = '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>';
-        toast.className = 'toast success';
+        toast.classList.remove('border-red-300', 'dark:border-red-700', 'bg-red-50', 'dark:bg-red-900/10');
+        toast.classList.add('border-green-300', 'dark:border-green-700', 'bg-green-50', 'dark:bg-green-900/10');
+        toastIcon.classList.add('text-green-600', 'dark:text-green-400');
+        toastIcon.classList.remove('text-red-600', 'dark:text-red-400');
     } else {
         toastIcon.innerHTML = '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>';
-        toast.className = 'toast error';
+        toast.classList.remove('border-green-300', 'dark:border-green-700', 'bg-green-50', 'dark:bg-green-900/10');
+        toast.classList.add('border-red-300', 'dark:border-red-700', 'bg-red-50', 'dark:bg-red-900/10');
+        toastIcon.classList.add('text-red-600', 'dark:text-red-400');
+        toastIcon.classList.remove('text-green-600', 'dark:text-green-400');
     }
-    
+
     toastMessage.textContent = message;
-    toast.classList.add('show');
-    
+    toast.classList.remove('opacity-0', 'pointer-events-none');
+    toast.classList.add('toast-enter');
+
     setTimeout(() => {
-        toast.classList.remove('show');
+        toast.classList.add('opacity-0', 'pointer-events-none');
+        toast.classList.remove('toast-enter');
     }, 3000);
 }
 
-// Execute task (simple mode - no output display)
+// Execute task (simple mode)
 async function executeTask() {
     const instruction = document.getElementById('instruction').value.trim();
     if (!instruction) { showToast('error', '请输入指令'); return; }
-    
+
     const runBtn = document.getElementById('runBtn');
-    const instructionInput = document.getElementById('instruction');
-    
+
     runBtn.disabled = true;
-    runBtn.classList.add('running');
-    
+    runBtn.classList.add('bg-amber-500', 'animate-pulse-slow');
+    runBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+
     try {
         const response = await fetch(`${API_BASE}/api/execute`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ instruction })
         });
-        
+
         const data = await response.json();
-        
+
         if (response.ok) {
             currentTaskId = data.task_id;
             updateStatus('running', '执行中');
             startPolling();
         } else {
             showToast('error', data.error || '执行失败');
-            runBtn.disabled = false;
-            runBtn.classList.remove('running');
+            resetRunBtn();
         }
     } catch (error) {
         showToast('error', error.message);
-        runBtn.disabled = false;
-        runBtn.classList.remove('running');
+        resetRunBtn();
     }
 }
 
-// Execute task (complex mode - with chat output)
+function resetRunBtn() {
+    const runBtn = document.getElementById('runBtn');
+    runBtn.disabled = false;
+    runBtn.classList.remove('bg-amber-500', 'animate-pulse-slow');
+    runBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+}
+
+// Execute task (complex mode)
 async function executeTaskComplex() {
     const instruction = document.getElementById('chatInstruction').value.trim();
     if (!instruction) { addAIMessage('请输入指令'); return; }
-    
+
     const sendBtn = document.getElementById('sendBtn');
     const input = document.getElementById('chatInstruction');
-    
+
     sendBtn.disabled = true;
     addUserMessage(instruction);
     input.value = '';
     input.style.height = 'auto';
-    
+
     const aiMessageId = addAIThinkingMessage();
-    
+
     try {
         const response = await fetch(`${API_BASE}/api/execute`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ instruction })
         });
-        
+
         const data = await response.json();
-        
+
         if (response.ok) {
             currentTaskId = data.task_id;
             updateStatus('running', '执行中');
@@ -271,50 +314,52 @@ async function executeTaskComplex() {
 
 function startPolling() {
     if (pollingInterval) clearInterval(pollingInterval);
-    
+
     pollingInterval = setInterval(async () => {
         if (!currentTaskId) return;
-        
+
         try {
             const response = await fetch(`${API_BASE}/api/task/${currentTaskId}`);
             const data = await response.json();
-            
+
             if (data.status === 'completed') {
                 clearInterval(pollingInterval);
                 updateStatus('ready', '就绪');
                 showToast('success', '任务完成！');
                 await loadOutputFiles();
-                document.getElementById('runBtn').disabled = false;
-                document.getElementById('runBtn').classList.remove('running');
+                resetRunBtn();
             } else if (data.status === 'failed' || data.status === 'timeout') {
                 clearInterval(pollingInterval);
                 updateStatus('ready', '就绪');
                 showToast('error', `任务失败：${data.status}`);
-                document.getElementById('runBtn').disabled = false;
-                document.getElementById('runBtn').classList.remove('running');
+                resetRunBtn();
             }
-        } catch (error) { console.error('Polling error:', error); }
+        } catch (error) {
+            console.error('Polling error:', error);
+        }
     }, 2000);
 }
 
 function startPollingComplex(aiMessageId) {
     if (pollingInterval) clearInterval(pollingInterval);
-    
+
     pollingInterval = setInterval(async () => {
         if (!currentTaskId) return;
-        
+
         try {
             const response = await fetch(`${API_BASE}/api/task/${currentTaskId}`);
             const data = await response.json();
-            
+
             updateChatStatus(data, aiMessageId);
-            
+
             if (data.finished) {
                 clearInterval(pollingInterval);
                 document.getElementById('sendBtn').disabled = false;
                 await loadOutputFiles();
             }
-        } catch (error) { console.error('Polling error:', error); }
+        } catch (error) {
+            console.error('Polling error:', error);
+        }
     }, 2000);
 }
 
@@ -334,12 +379,14 @@ function updateChatStatus(data, aiMessageId) {
 function updateStatus(status, text) {
     const dot = document.getElementById('statusDot');
     const textEl = document.getElementById('statusText');
-    
+
     if (status === 'running') {
-        dot.classList.add('running');
+        dot.classList.add('bg-amber-500', 'animate-pulse-slow');
+        dot.classList.remove('bg-green-500');
         textEl.textContent = text;
     } else {
-        dot.classList.remove('running');
+        dot.classList.remove('bg-amber-500', 'animate-pulse-slow');
+        dot.classList.add('bg-green-500');
         textEl.textContent = text;
     }
 }
@@ -350,26 +397,24 @@ async function loadOutputFiles() {
         const data = await response.json();
         const fileList = document.getElementById('outputFileList');
         const outputCount = document.getElementById('outputCount');
-        
+
         outputCount.textContent = data.files ? data.files.length : 0;
-        
+
         if (data.files && data.files.length > 0) {
             fileList.innerHTML = '';
             data.files.forEach(file => {
                 const item = document.createElement('div');
-                item.className = 'output-file';
+                item.className = 'p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg transition-all duration-150 hover:bg-gray-100 dark:hover:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600';
                 const fileName = typeof file === 'string' ? file : file.name;
                 const fileSize = typeof file === 'object' && file.size ? file.size : 0;
                 const fileMod = typeof file === 'object' && file.modified ? file.modified : Date.now();
                 item.innerHTML = `
-                    <div class="output-file-name">${escapeHtml(fileName)}</div>
-                    <div class="output-file-info">
-                        大小：${formatFileSize(fileSize)} · 修改时间：${new Date(fileMod).toLocaleString('zh-CN')}
-                    </div>
-                    <div style="display: flex; gap: 6px; margin-top: 6px;">
-                        <a href="${API_BASE}/api/files/download/${encodeURIComponent(fileName)}" class="btn btn-success btn-sm" style="flex: 1;">下载</a>
-                        <button onclick="deleteOutputFile('${escapeHtml(fileName)}')" class="btn btn-icon btn-sm" title="删除">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <div class="font-semibold break-all mb-1 text-xs text-gray-800 dark:text-gray-200">${escapeHtml(fileName)}</div>
+                    <div class="text-xs text-gray-400 dark:text-gray-500 mb-2">大小：${formatFileSize(fileSize)} · 修改时间：${new Date(fileMod).toLocaleString('zh-CN')}</div>
+                    <div class="flex gap-1.5">
+                        <a href="${API_BASE}/api/files/download/${encodeURIComponent(fileName)}" class="flex-1 px-2 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded-md flex items-center justify-center transition-colors duration-150">下载</a>
+                        <button onclick="deleteOutputFile('${escapeHtml(fileName)}')" class="p-1.5 border border-gray-300 dark:border-gray-600 rounded-md text-gray-400 hover:text-red-500 hover:border-red-300 dark:hover:border-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-150" title="删除">
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <polyline points="3 6 5 6 21 6"/>
                                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
                             </svg>
@@ -380,15 +425,16 @@ async function loadOutputFiles() {
             });
         } else {
             fileList.innerHTML = `
-                <div class="empty-state">
-                    <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <div class="text-center text-gray-400 dark:text-gray-500 py-8">
+                    <svg class="w-10 h-10 mx-auto mb-3 text-gray-300 dark:text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
                     </svg>
-                    <div>暂无输出文件</div>
-                </div>
-            `;
+                    <div class="text-sm">暂无输出文件</div>
+                </div>`;
         }
-    } catch (error) { console.error('Error loading output files:', error); }
+    } catch (error) {
+        console.error('Error loading output files:', error);
+    }
 }
 
 function escapeHtml(text) {
@@ -406,18 +452,19 @@ function formatFileSize(bytes) {
 
 // Auto-resize textarea
 const textarea = document.getElementById('instruction');
-textarea.addEventListener('input', function() {
-    this.style.height = 'auto';
-    this.style.height = Math.min(this.scrollHeight, 300) + 'px';
-});
+if (textarea) {
+    textarea.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 300) + 'px';
+    });
 
-// Enter to run (without shift)
-textarea.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        executeTask();
-    }
-});
+    textarea.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            executeTask();
+        }
+    });
+}
 
 // Complex mode - auto-resize chat input
 const chatTextarea = document.getElementById('chatInstruction');
@@ -426,7 +473,7 @@ if (chatTextarea) {
         this.style.height = 'auto';
         this.style.height = Math.min(this.scrollHeight, 200) + 'px';
     });
-    
+
     chatTextarea.addEventListener('keydown', function(e) {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
@@ -439,12 +486,12 @@ if (chatTextarea) {
 function addAIMessage(content) {
     const chatMessages = document.getElementById('chatMessages');
     const messageDiv = document.createElement('div');
-    messageDiv.className = 'message message-ai';
+    messageDiv.className = 'flex flex-col gap-1 items-start animate-fade-in';
     messageDiv.innerHTML = `
-        <div class="message-content">
-            <div class="message-bubble">${escapeHtml(content)}</div>
-            <div class="message-meta">刚刚</div>
+        <div class="max-w-full">
+            <div class="text-sm leading-relaxed text-gray-800 dark:text-gray-200">${escapeHtml(content)}</div>
         </div>
+        <div class="text-xs text-gray-400 dark:text-gray-500">刚刚</div>
     `;
     chatMessages.appendChild(messageDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -453,12 +500,12 @@ function addAIMessage(content) {
 function addUserMessage(content) {
     const chatMessages = document.getElementById('chatMessages');
     const messageDiv = document.createElement('div');
-    messageDiv.className = 'message message-user';
+    messageDiv.className = 'flex flex-col gap-1 items-end animate-fade-in';
     messageDiv.innerHTML = `
-        <div class="message-content">
-            <div class="message-bubble">${escapeHtml(content)}</div>
-            <div class="message-meta">${new Date().toLocaleTimeString('zh-CN', {hour: '2-digit', minute:'2-digit'})}</div>
+        <div class="max-w-full">
+            <div class="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-3 rounded-xl rounded-br-md text-sm leading-relaxed text-gray-800 dark:text-gray-200 shadow-sm">${escapeHtml(content)}</div>
         </div>
+        <div class="text-xs text-gray-400 dark:text-gray-500">${new Date().toLocaleTimeString('zh-CN', {hour: '2-digit', minute:'2-digit'})}</div>
     `;
     chatMessages.appendChild(messageDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -467,11 +514,9 @@ function addUserMessage(content) {
 function addSystemMessage(content) {
     const chatMessages = document.getElementById('chatMessages');
     const messageDiv = document.createElement('div');
-    messageDiv.style.cssText = 'text-align: center; margin: 10px 0;';
+    messageDiv.className = 'text-center my-2 animate-fade-in';
     messageDiv.innerHTML = `
-        <span style="background: var(--bg-tertiary); padding: 6px 12px; border-radius: 999px; font-size: 11px; color: var(--text-secondary);">
-            ${escapeHtml(content)}
-        </span>
+        <span class="inline-block bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-full text-xs text-gray-500 dark:text-gray-400">${escapeHtml(content)}</span>
     `;
     chatMessages.appendChild(messageDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -481,13 +526,13 @@ function addAIThinkingMessage() {
     const chatMessages = document.getElementById('chatMessages');
     const messageId = 'msg-' + Date.now();
     const messageDiv = document.createElement('div');
-    messageDiv.className = 'message message-ai';
+    messageDiv.className = 'flex flex-col gap-1 items-start animate-fade-in';
     messageDiv.id = messageId;
     messageDiv.innerHTML = `
-        <div class="message-content">
-            <div class="message-bubble">
-                <div style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary);">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite;">
+        <div class="max-w-full">
+            <div class="text-sm text-gray-500 dark:text-gray-400">
+                <div class="flex items-center gap-2">
+                    <svg class="w-3.5 h-3.5 animate-spin-slow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
                     </svg>
                     <span>思考中...</span>
@@ -503,51 +548,51 @@ function addAIThinkingMessage() {
 function updateMessage(messageId, type, data = null) {
     const messageDiv = document.getElementById(messageId);
     if (!messageDiv) return;
-    
+
     if (type === 'task_started') {
         messageDiv.innerHTML = `
-            <div class="message-content">
-                <div class="message-bubble">收到指令，开始执行任务...</div>
-                <div class="message-meta">${new Date().toLocaleTimeString('zh-CN', {hour: '2-digit', minute:'2-digit'})}</div>
+            <div class="max-w-full">
+                <div class="text-sm leading-relaxed text-gray-800 dark:text-gray-200">收到指令，开始执行任务...</div>
             </div>
+            <div class="text-xs text-gray-400 dark:text-gray-500">${new Date().toLocaleTimeString('zh-CN', {hour: '2-digit', minute:'2-digit'})}</div>
         `;
     } else if (type === 'running' && data) {
         const cleanedOutput = data.stdout ? cleanGooseOutput(data.stdout) : '';
         messageDiv.innerHTML = `
-            <div class="message-content">
-                <div class="message-bubble">
+            <div class="max-w-full w-full">
+                <div class="text-sm leading-relaxed text-gray-800 dark:text-gray-200 w-full">
                     ${cleanedOutput ? createToolCall('执行中', '正在处理任务', cleanedOutput, true) : ''}
-                    <div style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); margin-top: 12px;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite;">
+                    <div class="flex items-center gap-2 text-gray-500 dark:text-gray-400 mt-3">
+                        <svg class="w-3.5 h-3.5 animate-spin-slow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
                         </svg>
                         <span>正在处理，请稍候...</span>
                     </div>
                 </div>
-                <div class="message-meta">${new Date().toLocaleTimeString('zh-CN', {hour: '2-digit', minute:'2-digit'})}</div>
             </div>
+            <div class="text-xs text-gray-400 dark:text-gray-500">${new Date().toLocaleTimeString('zh-CN', {hour: '2-digit', minute:'2-digit'})}</div>
         `;
     } else if (type === 'completed' && data) {
         let contentHtml = '';
-        
+
         if (data.stdout) {
             const cleaned = cleanGooseOutput(data.stdout);
             contentHtml += `<div class="markdown-body">${renderMarkdown(cleaned)}</div>`;
         }
-        
+
         if (data.output_files && data.output_files.length > 0) {
             contentHtml += `
-                <div style="margin-top: 16px; padding: 12px; background: var(--success-bg); border: 1px solid var(--success); border-radius: var(--radius-md);">
-                    <strong style="color: var(--success); display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <div class="mt-4 p-3 bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-lg">
+                    <div class="flex items-center gap-1.5 text-green-600 dark:text-green-400 font-semibold mb-2 text-sm">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
                         </svg>
                         生成文件
-                    </strong>
-                    <div style="margin-left: 8px;">
+                    </div>
+                    <div class="ml-2 space-y-1">
                         ${data.output_files.map(f => `
-                            <div style="display: flex; align-items: center; gap: 6px; font-family: monospace; font-size: 11px; color: var(--text-primary); padding: 4px 0;">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="2">
+                            <div class="flex items-center gap-1.5 font-mono text-xs text-gray-700 dark:text-gray-300 py-1">
+                                <svg class="w-3 h-3 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <polyline points="9 17 14 12 9 7"/>
                                 </svg>
                                 ${escapeHtml(f)}
@@ -557,39 +602,33 @@ function updateMessage(messageId, type, data = null) {
                 </div>
             `;
         }
-        
+
         messageDiv.innerHTML = `
-            <div class="message-content">
-                <div class="message-bubble">
-                    ${contentHtml}
-                </div>
-                <div class="message-meta">完成于 ${new Date().toLocaleTimeString('zh-CN', {hour: '2-digit', minute:'2-digit'})}</div>
+            <div class="max-w-full w-full">
+                <div class="text-sm leading-relaxed text-gray-800 dark:text-gray-200 w-full">${contentHtml}</div>
             </div>
+            <div class="text-xs text-gray-400 dark:text-gray-500">完成于 ${new Date().toLocaleTimeString('zh-CN', {hour: '2-digit', minute:'2-digit'})}</div>
         `;
     } else if (type === 'failed' && data) {
         messageDiv.innerHTML = `
-            <div class="message-content">
-                <div class="message-bubble">
-                    <div style="font-weight: 600; margin-bottom: 12px; color: var(--error);">
-                        任务失败：${data.status}
-                    </div>
+            <div class="max-w-full w-full">
+                <div class="text-sm leading-relaxed text-gray-800 dark:text-gray-200 w-full">
+                    <div class="font-semibold mb-3 text-red-600 dark:text-red-400">任务失败：${data.status}</div>
                     ${data.error ? `<div class="log-output">${escapeHtml(data.error)}</div>` : ''}
-                    <div style="margin-top: 12px; color: var(--text-secondary); font-size: 12px;">
-                        请检查指令或文件，然后重试。
-                    </div>
+                    <div class="mt-3 text-gray-500 dark:text-gray-400 text-xs">请检查指令或文件，然后重试。</div>
                 </div>
-                <div class="message-meta">失败于 ${new Date().toLocaleTimeString('zh-CN', {hour: '2-digit', minute:'2-digit'})}</div>
             </div>
+            <div class="text-xs text-gray-400 dark:text-gray-500">失败于 ${new Date().toLocaleTimeString('zh-CN', {hour: '2-digit', minute:'2-digit'})}</div>
         `;
     } else if (type === 'error') {
         messageDiv.innerHTML = `
-            <div class="message-content">
-                <div class="message-bubble">${escapeHtml(data)}</div>
-                <div class="message-meta">${new Date().toLocaleTimeString('zh-CN', {hour: '2-digit', minute:'2-digit'})}</div>
+            <div class="max-w-full">
+                <div class="text-sm text-red-600 dark:text-red-400">${escapeHtml(data)}</div>
             </div>
+            <div class="text-xs text-gray-400 dark:text-gray-500">${new Date().toLocaleTimeString('zh-CN', {hour: '2-digit', minute:'2-digit'})}</div>
         `;
     }
-    
+
     const chatMessages = document.getElementById('chatMessages');
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
@@ -621,24 +660,22 @@ function cleanGooseOutput(text) {
 function createToolCall(title, subtitle, content, isLoading = false) {
     const toolId = 'tool-' + Date.now();
     return `
-        <div class="tool-call">
-            <div class="tool-trigger" onclick="toggleTool('${toolId}')" role="button" aria-expanded="false" id="${toolId}-trigger">
-                <svg class="tool-trigger-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <div class="w-full my-2 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+            <button onclick="toggleTool('${toolId}')" class="w-full flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-150 cursor-pointer text-left" id="${toolId}-trigger" aria-expanded="false">
+                <svg class="w-4 h-4 text-gray-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="4 17 10 11 4 5"/>
                     <line x1="12" y1="19" x2="20" y2="19"/>
                 </svg>
-                <div class="tool-trigger-content">
-                    <span class="tool-trigger-title">${escapeHtml(title)}</span>
-                    ${subtitle ? `<span class="tool-trigger-subtitle">${escapeHtml(subtitle)}</span>` : ''}
+                <div class="flex-1 min-w-0 flex flex-col gap-0.5">
+                    <span class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">${escapeHtml(title)}</span>
+                    ${subtitle ? `<span class="text-xs text-gray-500 dark:text-gray-400 truncate">${escapeHtml(subtitle)}</span>` : ''}
                 </div>
-                <div class="tool-trigger-arrow">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="9 18 15 12 9 6"/>
-                    </svg>
-                </div>
-            </div>
-            <div class="tool-content collapsed" id="${toolId}-content">
-                <div class="tool-content-inner">
+                <svg class="w-4 h-4 text-gray-400 flex-shrink-0 transition-transform duration-200" id="${toolId}-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6"/>
+                </svg>
+            </button>
+            <div class="tool-content collapsed bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700" id="${toolId}-content">
+                <div class="p-3">
                     <div class="log-output">${escapeHtml(content)}</div>
                 </div>
             </div>
@@ -649,17 +686,20 @@ function createToolCall(title, subtitle, content, isLoading = false) {
 function toggleTool(toolId) {
     const content = document.getElementById(toolId + '-content');
     const trigger = document.getElementById(toolId + '-trigger');
-    
+    const arrow = document.getElementById(toolId + '-arrow');
+
     if (!content || !trigger) return;
-    
+
     const isCollapsed = content.classList.contains('collapsed');
-    
+
     if (isCollapsed) {
         content.classList.remove('collapsed');
         trigger.setAttribute('aria-expanded', 'true');
+        if (arrow) arrow.classList.add('rotate-90');
     } else {
         content.classList.add('collapsed');
         trigger.setAttribute('aria-expanded', 'false');
+        if (arrow) arrow.classList.remove('rotate-90');
     }
 }
 
@@ -680,16 +720,7 @@ function renderMarkdown(text) {
     return marked.parse(text);
 }
 
-// Pulse animation for running state
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-`;
-document.head.appendChild(style);
-
-loadInputFiles();
-loadOutputFiles();
-
+// Cleanup on page unload
 window.addEventListener('beforeunload', () => {
     fetch(`${API_BASE}/api/files/input`, { method: 'DELETE', keepalive: true }).catch(() => {});
     fetch(`${API_BASE}/api/files/output`, { method: 'DELETE', keepalive: true }).catch(() => {});

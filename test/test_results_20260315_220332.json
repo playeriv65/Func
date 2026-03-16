@@ -1,0 +1,72 @@
+{
+  "timestamp": "2026-03-15T22:03:32.368944",
+  "total": 6,
+  "passed": 4,
+  "results": [
+    {
+      "id": "gis_001",
+      "name": "KML转GeoJSON",
+      "category": "GIS地理数据转换",
+      "status": "passed",
+      "output_files": [
+        "converted.geojson"
+      ],
+      "duration": 42.1,
+      "notes": "找到文件: converted.geojson"
+    },
+    {
+      "id": "gis_002",
+      "name": "GeoJSON转KML",
+      "category": "GIS地理数据转换",
+      "status": "passed",
+      "output_files": [
+        "geojson_to_kml.py",
+        "sample_countries.kml",
+        "ply_to_stl_converter.py"
+      ],
+      "duration": 110.2,
+      "notes": "找到文件: sample_countries.kml"
+    },
+    {
+      "id": "gis_003",
+      "name": "GPX转GeoJSON",
+      "category": "GIS地理数据转换",
+      "status": "passed",
+      "output_files": [
+        "track.geojson",
+        "转换说明.md"
+      ],
+      "duration": 54.1,
+      "notes": "找到文件: track.geojson"
+    },
+    {
+      "id": "gis_004",
+      "name": "GeoJSON转GPX",
+      "category": "GIS地理数据转换",
+      "status": "failed",
+      "output_files": [],
+      "duration": 6.0,
+      "notes": "输出目录为空"
+    },
+    {
+      "id": "gis_005",
+      "name": "GeoJSON属性提取",
+      "category": "GIS地理数据转换",
+      "status": "passed",
+      "output_files": [
+        "countries_coordinates.csv"
+      ],
+      "duration": 52.1,
+      "notes": "找到文件: countries_coordinates.csv"
+    },
+    {
+      "id": "gis_006",
+      "name": "坐标格式转换",
+      "category": "GIS地理数据转换",
+      "status": "failed",
+      "output_files": [],
+      "duration": 8.0,
+      "notes": "输出目录为空"
+    }
+  ]
+}

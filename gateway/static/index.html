@@ -4,831 +4,339 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Magic Func</title>
-    
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    
+
     <!-- Marked.js for Markdown rendering -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    
-    <!-- Highlight.js for code highlighting (UMD version) -->
+
+    <!-- Highlight.js for code highlighting -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github-dark.min.css">
     <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
-    
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        },
+                        success: '#22c55e',
+                        error: '#ef4444',
+                        warning: '#f59e0b',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+                    },
+                },
+            },
+        }
+    </script>
+
     <style>
-        :root {
-            /* Light Mode */
-            --bg-primary: #ffffff;
-            --bg-secondary: #f9fafb;
-            --bg-tertiary: #f3f4f6;
-            --bg-elevated: #ffffff;
-            
-            --border: #e5e7eb;
-            --border-hover: #d1d5db;
-            --border-focus: #2563eb;
-            
-            --text-primary: #111827;
-            --text-secondary: #6b7280;
-            --text-tertiary: #9ca3af;
-            --text-weaker: #d1d5db;
-            
-            --accent: #2563eb;
-            --accent-hover: #1d4ed8;
-            --accent-bg: rgba(37, 99, 235, 0.1);
-            
-            --success: #16a34a;
-            --success-bg: rgba(22, 163, 74, 0.1);
-            --error: #dc2626;
-            --error-bg: rgba(220, 38, 38, 0.1);
-            --warning: #f59e0b;
-            --warning-bg: rgba(245, 158, 11, 0.1);
-            
-            --user-message-bg: #f9fafb;
-            --user-message-border: #e5e7eb;
-            --ai-message-bg: transparent;
-            
-            --spacing-xs: 4px;
-            --spacing-sm: 8px;
-            --spacing-md: 12px;
-            --spacing-lg: 16px;
-            --spacing-xl: 24px;
-            
-            --radius-sm: 6px;
-            --radius-md: 8px;
-            --radius-lg: 12px;
-            
-            --transition-fast: 0.15s ease;
-            --transition-base: 0.2s ease;
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
         }
-        
-        /* Dark Mode */
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --bg-primary: #000000;
-                --bg-secondary: #111111;
-                --bg-tertiary: #1a1a1a;
-                --bg-elevated: #000000;
-                
-                --border: #222222;
-                --border-hover: #333333;
-                --border-focus: #3b82f6;
-                
-                --text-primary: #fafafa;
-                --text-secondary: #a1a1aa;
-                --text-tertiary: #71717a;
-                --text-weaker: #525252;
-                
-                --accent: #3b82f6;
-                --accent-hover: #60a5fa;
-                --accent-bg: rgba(59, 130, 246, 0.1);
-                
-                --success: #22c55e;
-                --success-bg: rgba(34, 197, 94, 0.1);
-                --error: #ef4444;
-                --error-bg: rgba(239, 68, 68, 0.1);
-                --warning: #f59e0b;
-                --warning-bg: rgba(245, 158, 11, 0.1);
-                
-                --user-message-bg: #111111;
-                --user-message-border: #222222;
-            }
+        ::-webkit-scrollbar-track {
+            background: transparent;
         }
-        
-        [data-theme="light"] {
-            --bg-primary: #ffffff; --bg-secondary: #f9fafb; --bg-tertiary: #f3f4f6;
-            --border: #e5e7eb; --border-hover: #d1d5db;
-            --text-primary: #111827; --text-secondary: #6b7280; --text-tertiary: #9ca3af;
-            --accent: #2563eb; --accent-hover: #1d4ed8;
-            --user-message-bg: #f9fafb;
+        ::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 3px;
         }
-        
-        [data-theme="dark"] {
-            --bg-primary: #000000; --bg-secondary: #111111; --bg-tertiary: #1a1a1a;
-            --border: #222222; --border-hover: #333333;
-            --text-primary: #fafafa; --text-secondary: #a1a1aa; --text-tertiary: #71717a;
-            --accent: #3b82f6; --accent-hover: #60a5fa;
-            --user-message-bg: #111111;
+        ::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
         }
-        
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
+
+        .dark ::-webkit-scrollbar-thumb {
+            background: #333;
         }
-        
-        header {
-            background: var(--bg-secondary);
-            border-bottom: 1px solid var(--border);
-            padding: var(--spacing-sm) var(--spacing-lg);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-shrink: 0;
-            height: 52px;
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: #444;
         }
-        
-        .header-left { display: flex; align-items: center; gap: var(--spacing-md); }
-        .logo { width: 24px; height: 24px; color: var(--accent); }
-        .app-name { font-size: 14px; font-weight: 600; color: var(--text-primary); }
-        
-        .status-badge {
-            display: flex; align-items: center; gap: 6px;
-            padding: 4px 10px; border-radius: 999px;
-            font-size: 12px; font-weight: 500;
-            background: var(--bg-tertiary); color: var(--text-secondary);
-            border: 1px solid var(--border);
+
+        /* Animations */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
-        
-        .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
-        .status-dot.running { background: var(--warning); animation: pulse 1.5s infinite; }
-        
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        
-        .theme-toggle {
-            display: flex; align-items: center; gap: 6px;
-            padding: 4px 8px; border-radius: 999px;
-            background: var(--bg-tertiary); border: 1px solid var(--border);
-            cursor: pointer; transition: all var(--transition-fast);
-            margin-left: var(--spacing-md);
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        
-        .theme-toggle:hover { background: var(--bg-elevated); border-color: var(--border-hover); }
-        .theme-toggle-icon { width: 16px; height: 16px; color: var(--text-secondary); }
-        .theme-toggle-text {
-            font-size: 11px; font-weight: 500; color: var(--text-secondary);
-            text-transform: uppercase; letter-spacing: 0.05em;
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
-        
-        .main-container {
-            display: grid;
-            grid-template-columns: 260px 1fr 260px;
-            flex: 1; overflow: hidden;
-            gap: 1px; background: var(--border);
+        @keyframes slideDown {
+            from { transform: translateX(-50%) translateY(-100px); opacity: 0; }
+            to { transform: translateX(-50%) translateY(0); opacity: 1; }
         }
-        
-        .panel {
-            display: flex; flex-direction: column;
-            overflow: hidden; background: var(--bg-primary);
-        }
-        
-        .panel-header {
-            padding: var(--spacing-sm) var(--spacing-md);
-            border-bottom: 1px solid var(--border);
-            font-size: 12px; font-weight: 600; color: var(--text-secondary);
-            background: var(--bg-secondary);
-            display: flex; align-items: center; justify-content: space-between;
-            flex-shrink: 0; height: 40px;
-            text-transform: uppercase; letter-spacing: 0.05em;
-        }
-        
-        .panel-header-counter {
-            font-weight: 400; color: var(--text-tertiary); font-size: 11px;
-            background: var(--bg-tertiary); padding: 2px 8px; border-radius: 999px;
-        }
-        
-        .panel-content { flex: 1; overflow-y: auto; padding: var(--spacing-md); }
-        
-        .upload-zone {
-            border: 2px dashed var(--border); border-radius: var(--radius-lg);
-            padding: var(--spacing-xl); text-align: center;
-            cursor: pointer; transition: all var(--transition-base);
-            margin-bottom: var(--spacing-md); background: var(--bg-secondary);
-        }
-        
-        .upload-zone:hover { border-color: var(--border-focus); background: var(--accent-bg); }
-        .upload-zone.dragover { border-color: var(--border-focus); background: var(--accent-bg); transform: scale(0.98); }
-        .upload-icon { width: 36px; height: 36px; margin: 0 auto var(--spacing-sm); color: var(--text-tertiary); }
-        .upload-text { font-size: 13px; font-weight: 500; color: var(--text-primary); }
-        .upload-subtext { font-size: 11px; color: var(--text-tertiary); margin-top: var(--spacing-xs); }
-        
-        .file-list { display: flex; flex-direction: column; gap: var(--spacing-sm); }
-        
-        .file-item {
-            display: flex; align-items: center; gap: var(--spacing-sm);
-            padding: var(--spacing-sm) var(--spacing-md);
-            background: var(--bg-secondary); border: 1px solid var(--border);
-            border-radius: var(--radius-md); font-size: 12px;
-            transition: all var(--transition-fast);
-        }
-        
-        .file-item:hover { background: var(--bg-tertiary); border-color: var(--border-hover); }
-        .file-icon { width: 16px; height: 16px; color: var(--text-tertiary); flex-shrink: 0; }
-        .file-name { flex: 1; word-break: break-all; color: var(--text-primary); font-weight: 500; }
-        
-        .btn {
-            background: var(--accent); color: white; border: none;
-            padding: 8px 14px; border-radius: var(--radius-md);
-            cursor: pointer; font-size: 12px; font-weight: 500;
-            transition: all var(--transition-fast);
-            display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-        }
-        
-        .btn:hover { background: var(--accent-hover); }
-        .btn:disabled { background: var(--text-tertiary); cursor: not-allowed; opacity: 0.5; }
-        .btn-sm { padding: 4px 8px; font-size: 11px; min-width: 26px; height: 26px; }
-        .btn-icon { padding: 4px; background: transparent; color: var(--text-tertiary); border: 1px solid var(--border); }
-        .btn-icon:hover { background: var(--bg-tertiary); color: var(--error); border-color: var(--error); }
-        .btn-block { width: 100%; }
-        .btn-success { background: var(--success); }
-        .btn-success:hover { background: #16a34a; }
-        
-        .chat-panel { 
-            background: var(--bg-primary); 
-            display: flex; 
-            flex-direction: column; 
-            position: relative;
-        }
-        
-        /* Complex mode - full height chat */
-        .chat-panel.complex-mode {
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .chat-panel.complex-mode .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: var(--spacing-lg);
-            padding: var(--spacing-lg);
-        }
-        
-        .chat-panel.complex-mode .chat-input-container {
-            border-top: 1px solid var(--border);
-            padding: var(--spacing-md);
-            background: var(--bg-primary);
-            flex-shrink: 0;
-        }
-        
-        /* Hide simple mode instruction panel by default */
-        .instruction-panel {
-            display: none;
-        }
-        
-        /* Show instruction panel in simple mode */
-        .chat-panel:not(.complex-mode) .instruction-panel {
-            display: flex;
-        }
-        
-        /* Hide chat elements by default (simple mode) */
-        .chat-panel:not(.complex-mode) .chat-messages,
-        .chat-panel:not(.complex-mode) .chat-input-container {
-            display: none;
-        }
-        
-        /* Show chat elements in complex mode */
-        .chat-panel.complex-mode .instruction-panel {
-            display: none;
-        }
-        
-        .chat-panel.complex-mode .chat-messages,
-        .chat-panel.complex-mode .chat-input-container {
-            display: flex;
-        }
-        
-        .chat-panel.complex-mode .chat-input-container {
-            display: block;
-        }
-        
-        /* Simple mode - center instruction panel */
-        .instruction-panel {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: var(--spacing-xl);
-            gap: 0;
-        }
-        
-        .instruction-box {
-            width: 100%;
-            max-width: 560px;
-            display: flex;
-            flex-direction: column;
-            gap: var(--spacing-md);
-        }
-            width: 100%;
-            max-width: 600px;
-            display: flex;
-            flex-direction: column;
-            gap: var(--spacing-md);
-        }
-        
-        .instruction-title {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-secondary);
-            text-align: center;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            margin-bottom: var(--spacing-sm);
-        }
-        
-        .instruction-input-container {
-            position: relative;
-        }
-        
-        .instruction-hint {
-            font-size: 11px;
-            color: var(--text-tertiary);
-            text-align: center;
-            margin-top: var(--spacing-sm);
-            line-height: 1.5;
-        }
-        
-        .instruction-input {
-            width: 100%;
-            min-height: 140px;
-            padding: var(--spacing-md);
-            padding-right: 60px;
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            resize: vertical;
-            font-family: inherit;
-            font-size: 14px;
-            line-height: 1.6;
-            color: var(--text-primary);
-            background: var(--bg-secondary);
-            transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
-        }
-        
-        .instruction-input:focus {
-            outline: none;
-            border-color: var(--border-focus);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-        }
-        
-        .instruction-input::placeholder { 
-            color: var(--text-tertiary);
-            line-height: 1.8;
-        }
-        
-        .run-btn {
-            position: absolute;
-            right: 8px;
-            bottom: 8px;
-            width: 44px;
-            height: 44px;
-            border-radius: var(--radius-md);
-            background: var(--accent);
-            color: white;
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all var(--transition-fast);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        
-        .run-btn:hover { 
-            background: var(--accent-hover); 
-            transform: scale(1.05);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-        }
-        .run-btn:disabled { 
-            background: var(--text-tertiary); 
-            cursor: not-allowed; 
-            transform: none;
-            box-shadow: none;
-        }
-        .run-btn.running { 
-            background: var(--warning); 
+
+        .animate-pulse-slow {
             animation: pulse 1.5s infinite;
         }
-        
-        .instruction-hint {
-            font-size: 12px;
-            color: var(--text-tertiary);
-            text-align: center;
-        }
-        
-        /* Toast notification */
-        .toast {
-            position: fixed;
-            top: 70px;
-            left: 50%;
-            transform: translateX(-50%) translateY(-100px);
-            background: var(--bg-primary);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            padding: var(--spacing-md) var(--spacing-lg);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
-            display: flex;
-            align-items: center;
-            gap: var(--spacing-sm);
-            opacity: 0;
-            transition: all 0.3s ease;
-            z-index: 1000;
-            max-width: 90%;
-        }
-        
-        .toast.show {
-            transform: translateX(-50%) translateY(0);
-            opacity: 1;
-        }
-        
-        .toast.success { 
-            border-color: var(--success);
-            background: var(--success-bg);
-        }
-        .toast.error { 
-            border-color: var(--error);
-            background: var(--error-bg);
-        }
-        .toast-icon { width: 20px; height: 20px; flex-shrink: 0; }
-        .toast.success .toast-icon { color: var(--success); }
-        .toast.error .toast-icon { color: var(--error); }
-        .toast-message { 
-            font-size: 13px; 
-            color: var(--text-primary); 
-            font-weight: 500;
-        }
-        
-        /* Hide old chat styles */
-        .chat-messages { display: none; }
-        
-        .message {
-            display: flex; flex-direction: column;
-            gap: var(--spacing-xs); max-width: 100%;
+        .animate-fade-in {
             animation: fadeIn 0.2s ease;
         }
-        
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .message-user { align-items: flex-end; }
-        .message-ai { align-items: flex-start; }
-        .message-content { max-width: 100%; }
-        
-        .message-user .message-bubble {
-            background: var(--user-message-bg); border: 1px solid var(--user-message-border);
-            padding: 12px 16px; border-radius: var(--radius-lg);
-            border-bottom-right-radius: var(--radius-sm);
-            font-size: 13px; line-height: 1.6; color: var(--text-primary);
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        .animate-spin-slow {
+            animation: spin 1s linear infinite;
         }
-        
-        .message-ai .message-bubble {
-            background: var(--ai-message-bg); border: none; padding: 0; width: 100%;
+
+        /* Toast animation */
+        .toast-enter {
+            animation: slideDown 0.3s ease forwards;
         }
-        
-        .message-meta { font-size: 11px; color: var(--text-tertiary); line-height: 1; }
-        .message-user .message-meta { text-align: right; }
-        
-        /* Tool Call Component (like OpenCode BasicTool) */
-        .tool-call {
-            width: 100%; margin: var(--spacing-sm) 0;
-            border-radius: var(--radius-md); overflow: hidden;
-        }
-        
-        .tool-trigger {
-            display: flex; align-items: center; gap: var(--spacing-sm);
-            padding: var(--spacing-sm) var(--spacing-md);
-            background: var(--bg-secondary); border: 1px solid var(--border);
-            cursor: pointer; user-select: none;
-            transition: all var(--transition-fast); height: 40px;
-        }
-        
-        .tool-trigger:hover { background: var(--bg-tertiary); border-color: var(--border-hover); }
-        
-        .tool-trigger-icon {
-            width: 18px; height: 18px; color: var(--text-secondary);
-            flex-shrink: 0;
-        }
-        
-        .tool-trigger-content {
-            flex: 1; min-width: 0;
-            display: flex; flex-direction: column; gap: 2px;
-        }
-        
-        .tool-trigger-title {
-            font-size: 13px; font-weight: 500; color: var(--text-primary);
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-        
-        .tool-trigger-subtitle {
-            font-size: 12px; color: var(--text-secondary);
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-        
-        .tool-trigger-arrow {
-            width: 20px; height: 20px;
-            display: flex; align-items: center; justify-content: center;
-            color: var(--text-tertiary);
-            transition: transform var(--transition-base); flex-shrink: 0;
-        }
-        
-        .tool-trigger[aria-expanded="true"] .tool-trigger-arrow { transform: rotate(90deg); }
-        
+
+        /* Tool call content animation */
         .tool-content {
-            border: 1px solid var(--border); border-top: none;
-            border-radius: 0 0 var(--radius-md) var(--radius-md);
-            background: var(--bg-secondary);
-            max-height: 400px; overflow-y: auto;
-            /* Smooth height animation like OpenCode */
             transition: max-height 0.35s ease-out, opacity 0.2s ease-out;
-            opacity: 1;
         }
-        
-        .tool-content.collapsed { 
-            display: block; /* Keep element in DOM for animation */
+        .tool-content.collapsed {
             max-height: 0;
             opacity: 0;
             overflow: hidden;
-            border: none;
         }
-        
-        .tool-content-inner { padding: var(--spacing-md); }
-        
-        .log-output {
-            background: #1f2937; color: #e5e7eb; padding: 12px;
-            border-radius: var(--radius-md);
+
+        /* Focus ring */
+        .focus-ring:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        /* Markdown styles */
+        .markdown-body h1,
+        .markdown-body h2,
+        .markdown-body h3 {
+            margin-top: 16px;
+            margin-bottom: 8px;
+            font-weight: 600;
+            line-height: 1.25;
+        }
+        .markdown-body h1 { font-size: 16px; border-bottom: 1px solid var(--tw-border-opacity, 1); padding-bottom: 4px; }
+        .markdown-body h2 { font-size: 14px; }
+        .markdown-body h3 { font-size: 13px; }
+        .markdown-body p { margin-bottom: 12px; }
+        .markdown-body ul,
+        .markdown-body ol { margin-bottom: 12px; padding-left: 24px; }
+        .markdown-body li { margin-bottom: 4px; }
+        .markdown-body code {
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
             font-family: 'JetBrains Mono', 'Fira Code', monospace;
-            font-size: 11px; line-height: 1.6;
-            overflow-x: auto; max-height: 300px; overflow-y: auto;
+            font-size: 12px;
+            color: #2563eb;
         }
-        
+        .dark .markdown-body code {
+            background: #1a1a1a;
+            color: #3b82f6;
+        }
+        .markdown-body pre {
+            background: #1f2937;
+            color: #f3f4f6;
+            padding: 14px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 12px 0;
+        }
+        .markdown-body pre code {
+            background: transparent;
+            padding: 0;
+            color: inherit;
+        }
+
+        /* Log output */
+        .log-output {
+            background: #1f2937;
+            color: #e5e7eb;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 11px;
+            line-height: 1.6;
+            overflow-x: auto;
+            max-height: 300px;
+            overflow-y: auto;
+        }
         .log-output .log-line { white-space: pre-wrap; word-break: break-all; }
         .log-output .log-line.install { color: #9ca3af; }
         .log-output .log-line.success { color: #4ade80; }
         .log-output .log-line.error { color: #f87171; }
-        
-        /* Markdown Styles */
-        .message-bubble .markdown-body { font-size: 13px; line-height: 1.7; }
-        
-        .message-bubble .markdown-body h1,
-        .message-bubble .markdown-body h2,
-        .message-bubble .markdown-body h3 {
-            margin-top: 16px; margin-bottom: 8px;
-            font-weight: 600; line-height: 1.25;
-        }
-        
-        .message-bubble .markdown-body h1 { font-size: 16px; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
-        .message-bubble .markdown-body h2 { font-size: 14px; }
-        .message-bubble .markdown-body h3 { font-size: 13px; }
-        
-        .message-bubble .markdown-body p { margin-bottom: 12px; }
-        .message-bubble .markdown-body ul,
-        .message-bubble .markdown-body ol { margin-bottom: 12px; padding-left: 24px; }
-        .message-bubble .markdown-body li { margin-bottom: 4px; }
-        
-        .message-bubble .markdown-body code {
-            background: var(--bg-tertiary); padding: 2px 6px;
-            border-radius: 4px; font-family: 'JetBrains Mono', 'Fira Code', monospace;
-            font-size: 12px; color: var(--accent);
-        }
-        
-        .message-bubble .markdown-body pre {
-            background: #1f2937; color: #f3f4f6; padding: 14px;
-            border-radius: var(--radius-md); overflow-x: auto; margin: 12px 0;
-        }
-        
-        .message-bubble .markdown-body pre code { background: transparent; padding: 0; color: inherit; }
-        
-        .chat-input-container {
-            border-top: 1px solid var(--border);
-            padding: var(--spacing-md);
-            background: var(--bg-primary); flex-shrink: 0;
-        }
-        
-        .chat-input-wrapper { position: relative; margin-bottom: var(--spacing-sm); }
-        
-        .chat-input {
-            width: 100%; padding: 12px 14px; padding-right: 100px;
-            border: 1px solid var(--border); border-radius: var(--radius-lg);
-            font-size: 13px; resize: none; font-family: inherit;
-            background: var(--bg-secondary); color: var(--text-primary);
-            min-height: 52px; max-height: 200px;
-            transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
-        }
-        
-        .chat-input:focus {
-            outline: none;
-            border-color: var(--border-focus);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-        }
-        
-        .chat-input::placeholder { color: var(--text-tertiary); }
-        
-        .send-btn {
-            position: absolute; right: 6px; bottom: 6px;
-            width: 40px; height: 40px; border-radius: var(--radius-md);
-            background: var(--accent); color: white; border: none;
-            cursor: pointer; display: flex;
-            align-items: center; justify-content: center;
-            transition: all var(--transition-fast);
-        }
-        
-        .send-btn:hover { background: var(--accent-hover); }
-        .send-btn:disabled { background: var(--text-tertiary); cursor: not-allowed; }
-        
-        .input-hint { font-size: 11px; color: var(--text-tertiary); text-align: center; }
-        
-        /* Hide chat elements by default (simple mode) */
-        .chat-messages,
-        .chat-input-container {
-            display: none;
-        }
-        
-        /* Show chat elements in complex mode */
-        .chat-panel.complex-mode .chat-messages,
-        .chat-panel.complex-mode .chat-input-container {
-            display: flex;
-        }
-        
-        .chat-panel.complex-mode .chat-input-container {
-            display: block;
-        }
-        
-        /* Mode switch */
-        .mode-switch {
-            display: flex; align-items: center; gap: var(--spacing-xs);
-            padding: var(--spacing-xs) var(--spacing-sm);
-            background: var(--bg-tertiary); border: 1px solid var(--border);
-            border-radius: var(--radius-md); cursor: pointer;
-            transition: all var(--transition-fast);
-        }
-        .mode-switch:hover { background: var(--bg-elevated); border-color: var(--border-hover); }
-        .mode-switch-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
-        .mode-switch-toggle {
-            width: 36px; height: 18px; background: var(--text-tertiary);
-            border-radius: 9px; position: relative; transition: background var(--transition-fast);
-        }
-        .mode-switch-toggle::after {
-            content: ''; position: absolute; top: 2px; left: 2px;
-            width: 14px; height: 14px; background: white;
-            border-radius: 50%; transition: transform var(--transition-fast);
-        }
-        .mode-switch.active .mode-switch-toggle { background: var(--accent); }
-        .mode-switch.active .mode-switch-toggle::after { transform: translateX(18px); }
-        
-        .output-files { display: flex; flex-direction: column; gap: var(--spacing-sm); }
-        
-        .output-file {
-            padding: var(--spacing-md);
-            background: var(--bg-secondary); border: 1px solid var(--border);
-            border-radius: var(--radius-md);
-            transition: all var(--transition-fast);
-        }
-        
-        .output-file:hover { background: var(--bg-tertiary); border-color: var(--border-hover); }
-        
-        .output-file-name {
-            font-weight: 600; word-break: break-all;
-            margin-bottom: var(--spacing-xs); font-size: 12px; color: var(--text-primary);
-        }
-        
-        .output-file-info { font-size: 10px; color: var(--text-tertiary); margin-bottom: var(--spacing-sm); }
-        
-        .empty-state { text-align: center; color: var(--text-tertiary); padding: var(--spacing-xl) var(--spacing-md); }
-        .empty-state-icon { width: 42px; height: 42px; margin: 0 auto var(--spacing-md); color: var(--text-tertiary); opacity: 0.5; }
-        
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: var(--border-hover); border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); }
     </style>
 </head>
-<body>
-    <header>
-        <div class="header-left">
-            <svg class="logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+<body class="bg-white dark:bg-black text-gray-900 dark:text-gray-100 h-screen flex flex-col overflow-hidden font-sans transition-colors duration-200">
+
+    <!-- Header -->
+    <header class="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-3 flex items-center justify-between flex-shrink-0 h-14">
+        <div class="flex items-center gap-3">
+            <svg class="w-6 h-6 text-blue-600 dark:text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M12 2L2 7l10 5 10-5-10-5z"/>
                 <path d="M2 17l10 5 10-5"/>
                 <path d="M2 12l10 5 10-5"/>
             </svg>
-            <span class="app-name">Magic Func</span>
+            <span class="text-sm font-semibold text-gray-900 dark:text-white">Magic Func</span>
         </div>
-        <div style="display: flex; align-items: center;">
-            <div class="status-badge">
-                <span class="status-dot" id="statusDot"></span>
+        <div class="flex items-center gap-3">
+            <!-- Status Badge -->
+            <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700">
+                <span id="statusDot" class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
                 <span id="statusText">就绪</span>
             </div>
-            <div class="theme-toggle" onclick="toggleTheme()" title="切换主题">
-                <svg class="theme-toggle-icon" id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="4" class="sun-icon" style="display: none;"/>
-                    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" class="sun-rays" style="display: none;"/>
-                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79" class="moon-icon"/>
+            <!-- Theme Toggle -->
+            <button onclick="toggleTheme()" class="flex items-center gap-1.5 px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-white dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-150">
+                <svg id="themeIcon" class="w-4 h-4 text-gray-500 dark:text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="4" class="sun-icon hidden dark:block"/>
+                    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" class="sun-rays hidden dark:block"/>
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79" class="moon-icon block dark:hidden"/>
                 </svg>
-                <span class="theme-toggle-text" id="themeText">自动</span>
-            </div>
-            <div class="mode-switch" id="modeSwitch" onclick="toggleMode()" title="切换复杂模式 (调试用)">
-                <span class="mode-switch-label">复杂模式</span>
-                <div class="mode-switch-toggle"></div>
-            </div>
+                <span id="themeText" class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">自动</span>
+            </button>
+            <!-- Mode Switch -->
+            <button id="modeSwitch" onclick="toggleMode()" class="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-white dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-150 cursor-pointer">
+                <span class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">复杂模式</span>
+                <div id="modeToggle" class="w-9 h-4.5 bg-gray-400 dark:bg-gray-600 rounded-full relative transition-colors duration-200">
+                    <div id="modeToggleDot" class="absolute top-0.5 left-0.5 w-3.5 h-3.5 bg-white rounded-full transition-transform duration-200"></div>
+                </div>
+            </button>
         </div>
     </header>
-    
-    <div class="main-container">
+
+    <!-- Main Container -->
+    <div class="flex-1 grid grid-cols-[280px_1fr_280px] overflow-hidden bg-gray-200 dark:bg-gray-800">
+
         <!-- Left Panel - Input Files -->
-        <div class="panel">
-            <div class="panel-header">
-                <span>输入文件</span>
-                <span class="panel-header-counter" id="fileCount">0</span>
+        <div class="flex flex-col overflow-hidden bg-white dark:bg-black border-r border-gray-200 dark:border-gray-800">
+            <!-- Panel Header -->
+            <div class="px-3 py-2 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex items-center justify-between flex-shrink-0 h-10">
+                <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">输入文件</span>
+                <span id="fileCount" class="text-xs font-normal text-gray-400 dark:text-gray-500 bg-gray-200 dark:bg-gray-800 px-2 py-0.5 rounded-full">0</span>
             </div>
-            <div class="panel-content">
-                <div class="upload-zone" id="uploadZone">
-                    <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <!-- Panel Content -->
+            <div class="flex-1 overflow-y-auto p-3">
+                <!-- Upload Zone -->
+                <div id="uploadZone" class="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl p-6 text-center cursor-pointer transition-all duration-200 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/10 mb-3 bg-gray-50 dark:bg-gray-900">
+                    <svg class="w-9 h-9 mx-auto mb-2 text-gray-400 dark:text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                         <polyline points="17 8 12 3 7 8"/>
                         <line x1="12" y1="3" x2="12" y2="15"/>
                     </svg>
-                    <div class="upload-text">拖拽文件到此处</div>
-                    <div class="upload-subtext">或点击上传</div>
+                    <div class="text-sm font-medium text-gray-700 dark:text-gray-300">拖拽文件到此处</div>
+                    <div class="text-xs text-gray-400 dark:text-gray-500 mt-1">或点击上传</div>
                 </div>
-                <input type="file" id="fileInput" multiple style="display: none;">
-                <div class="file-list" id="inputFileList">
-                    <div class="empty-state">暂无输入文件</div>
+                <input type="file" id="fileInput" multiple class="hidden">
+                <!-- File List -->
+                <div id="inputFileList" class="flex flex-col gap-2">
+                    <div class="text-center text-gray-400 dark:text-gray-500 py-8">
+                        <div class="text-sm">暂无输入文件</div>
+                    </div>
                 </div>
             </div>
         </div>
-        
-        <!-- Center Panel - Simple Instruction (default) -->
-        <div class="panel chat-panel" id="centerPanel">
-            <!-- Simple Mode -->
-            <div class="instruction-panel" id="simplePanel">
-                <div class="instruction-box">
-                    <div class="instruction-title">输入指令</div>
-                    <div class="instruction-input-container">
-                        <textarea 
-                            class="instruction-input" 
-                            id="instruction" 
-                            placeholder="输入指令，例如：&#10;把这个文档转换成 PDF 格式&#10;分析 data.csv 并生成统计报告&#10;提取图片中的文字内容..." 
+
+        <!-- Center Panel -->
+        <div id="centerPanel" class="flex flex-col overflow-hidden bg-white dark:bg-black relative">
+
+            <!-- Simple Mode - Instruction Panel -->
+            <div id="simplePanel" class="flex-1 flex flex-col items-center justify-center p-6">
+                <div class="w-full max-w-2xl flex flex-col gap-4">
+                    <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-center">输入指令</div>
+                    <div class="relative">
+                        <textarea
+                            id="instruction"
+                            class="w-full min-h-[160px] p-4 pr-16 border border-gray-200 dark:border-gray-700 rounded-xl resize-y font-sans text-sm leading-relaxed text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-900 transition-all duration-150 focus-ring focus:border-blue-500 dark:focus:border-blue-400 placeholder:text-gray-400 dark:placeholder:text-gray-600"
+                            placeholder="输入指令，例如：
+把这个文档转换成 PDF 格式
+分析 data.csv 并生成统计报告
+提取图片中的文字内容..."
                             rows="5"></textarea>
-                        <button class="run-btn" id="runBtn" onclick="executeTask()" title="运行 (Enter)">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <button id="runBtn" onclick="executeTask()" class="absolute right-2 bottom-2 w-11 h-11 rounded-lg bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center transition-all duration-150 hover:scale-105 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:shadow-none">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <polygon points="5 3 19 12 5 21 5 3"/>
                             </svg>
                         </button>
                     </div>
-                    <div class="instruction-hint">按 Enter 运行，Shift + Enter 换行</div>
+                    <div class="text-xs text-gray-400 dark:text-gray-500 text-center">按 Enter 运行，Shift + Enter 换行</div>
                 </div>
             </div>
-            
-            <!-- Complex Mode (Chat with agent output) -->
-            <div class="chat-messages" id="chatMessages">
-                <div class="message message-ai">
-                    <div class="message-content">
-                        <div class="message-bubble">
+
+            <!-- Complex Mode - Chat Messages -->
+            <div id="chatMessages" class="hidden flex-1 overflow-y-auto flex flex-col gap-6 p-6">
+                <div class="flex flex-col gap-1 items-start animate-fade-in">
+                    <div class="max-w-full">
+                        <div class="text-sm leading-relaxed text-gray-800 dark:text-gray-200">
                             你好！我是你的 AI 助手。<br><br>
                             在左侧上传文件，然后在下方输入指令，我会帮你完成任务。<br><br>
                             <strong>复杂模式</strong>会显示完整的执行过程和 agent 输出。
                         </div>
-                        <div class="message-meta">刚刚</div>
                     </div>
+                    <div class="text-xs text-gray-400 dark:text-gray-500">刚刚</div>
                 </div>
             </div>
-            <div class="chat-input-container" id="chatInputContainer">
-                <div class="chat-input-wrapper">
-                    <textarea class="chat-input" id="chatInstruction" placeholder="输入指令，例如：把这个文档转换成 PDF 格式..." rows="1"></textarea>
-                    <button class="send-btn" id="sendBtn" onclick="executeTaskComplex()">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+
+            <!-- Complex Mode - Chat Input -->
+            <div id="chatInputContainer" class="hidden border-t border-gray-200 dark:border-gray-800 p-4 bg-white dark:bg-black flex-shrink-0">
+                <div class="relative mb-2">
+                    <textarea
+                        id="chatInstruction"
+                        class="w-full py-3 px-4 pr-14 border border-gray-200 dark:border-gray-700 rounded-xl text-sm resize-none font-sans bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-[52px] max-h-[200px] transition-all duration-150 focus-ring focus:border-blue-500 dark:focus:border-blue-400 placeholder:text-gray-400 dark:placeholder:text-gray-600"
+                        placeholder="输入指令，例如：把这个文档转换成 PDF 格式..."
+                        rows="1"></textarea>
+                    <button id="sendBtn" onclick="executeTaskComplex()" class="absolute right-1.5 bottom-1.5 w-10 h-10 rounded-lg bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <svg class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <line x1="22" y1="2" x2="11" y2="13"/>
                             <polygon points="22 2 15 22 11 13 2 9 22 2"/>
                         </svg>
                     </button>
                 </div>
-                <div class="input-hint">按 Enter 发送，Shift + Enter 换行</div>
+                <div class="text-xs text-gray-400 dark:text-gray-500 text-center">按 Enter 发送，Shift + Enter 换行</div>
             </div>
         </div>
-        
+
         <!-- Right Panel - Output Files -->
-        <div class="panel">
-            <div class="panel-header">
-                <span>输出文件</span>
-                <span class="panel-header-counter" id="outputCount">0</span>
+        <div class="flex flex-col overflow-hidden bg-white dark:bg-black border-l border-gray-200 dark:border-gray-800">
+            <!-- Panel Header -->
+            <div class="px-3 py-2 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex items-center justify-between flex-shrink-0 h-10">
+                <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">输出文件</span>
+                <span id="outputCount" class="text-xs font-normal text-gray-400 dark:text-gray-500 bg-gray-200 dark:bg-gray-800 px-2 py-0.5 rounded-full">0</span>
             </div>
-            <div class="panel-content">
-                <div class="output-files" id="outputFileList">
-                    <div class="empty-state">
-                        <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <!-- Panel Content -->
+            <div class="flex-1 overflow-y-auto p-3">
+                <div id="outputFileList" class="flex flex-col gap-2">
+                    <div class="text-center text-gray-400 dark:text-gray-500 py-8">
+                        <svg class="w-10 h-10 mx-auto mb-3 text-gray-300 dark:text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
                         </svg>
-                        <div>暂无输出文件</div>
-                        <div style="margin-top: 8px; font-size: 11px;">任务完成后文件将显示在这里</div>
+                        <div class="text-sm">暂无输出文件</div>
+                        <div class="text-xs mt-2 opacity-70">任务完成后文件将显示在这里</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
+
     <!-- Toast Notification -->
-    <div class="toast" id="toast">
-        <svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <div id="toast" class="fixed top-16 left-1/2 -translate-x-1/2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 shadow-xl flex items-center gap-2 opacity-0 pointer-events-none transition-all duration-300 z-50 max-w-[90%]">
+        <svg id="toastIcon" class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
             <polyline points="22 4 12 14.01 9 11.01"/>
         </svg>
-        <span class="toast-message" id="toastMessage">任务完成</span>
+        <span id="toastMessage" class="text-sm font-medium text-gray-900 dark:text-gray-100">任务完成</span>
     </div>
-    
+
     <script src="/static/app.js"></script>
 </body>
 </html>

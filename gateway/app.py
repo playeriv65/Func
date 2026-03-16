@@ -73,8 +73,23 @@ def run_goose_task(task_id, instruction):
         stderr_lines = []
 
         def read_stream(stream, lines_list):
+            """读取流并过滤冗余输出"""
+            import re
+
+            # 过滤模式：移除 Goose 的截断提示和冗余信息
+            filter_patterns = [
+                r"\[Output exceeded \d+ bytes.*?\]",  # 输出截断提示
+                r"\[Output exceeded.*?\]",
+            ]
             for line in iter(stream.readline, ""):
-                lines_list.append(line)
+                # 检查是否匹配过滤模式
+                should_filter = False
+                for pattern in filter_patterns:
+                    if re.search(pattern, line):
+                        should_filter = True
+                        break
+                if not should_filter:
+                    lines_list.append(line)
                 tasks[task_id]["stdout"] = "".join(lines_list)
             stream.close()
 
