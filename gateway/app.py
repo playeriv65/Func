@@ -10,8 +10,21 @@ from datetime import datetime
 import threading
 import time
 import yaml
+import signal
+import fcntl
 
 app = Flask(__name__, static_folder="static")
+
+# ============= 安全控制配置 =============
+# 任务并发锁 - 防止多个任务同时运行
+task_lock = threading.Lock()
+active_task_id = None
+
+# 内存限制 - 每个容器最多 4GB
+CONTAINER_MEMORY_LIMIT = "4g"
+
+# Goose 超时时间（秒）
+GOOSE_TIMEOUT = int(os.environ.get("GOOSE_TIMEOUT", "300"))
 
 # 配置
 WORKSPACE_ROOT = os.environ.get("WORKSPACE_ROOT", "/workspace")
@@ -43,7 +56,7 @@ tasks = {}
 
 def run_goose_task(task_id, instruction):
     """在 sandbox 容器中执行 Goose 任务，支持流式输出"""
-    import threading
+    global active_task_id
 
     try:
         cmd = [
@@ -60,6 +73,8 @@ def run_goose_task(task_id, instruction):
             "-",
         ]
 
+        # 使用默认的 subprocess 设置，不创建进程组
+        # docker exec 启动的进程会被 docker 守护进程管理
         proc = subprocess.Popen(
             cmd,
             stdin=subprocess.PIPE,
@@ -81,17 +96,24 @@ def run_goose_task(task_id, instruction):
                 r"\[Output exceeded \d+ bytes.*?\]",  # 输出截断提示
                 r"\[Output exceeded.*?\]",
             ]
-            for line in iter(stream.readline, ""):
-                # 检查是否匹配过滤模式
-                should_filter = False
-                for pattern in filter_patterns:
-                    if re.search(pattern, line):
-                        should_filter = True
-                        break
-                if not should_filter:
-                    lines_list.append(line)
-                tasks[task_id]["stdout"] = "".join(lines_list)
-            stream.close()
+            try:
+                for line in iter(stream.readline, ""):
+                    # 检查是否匹配过滤模式
+                    should_filter = False
+                    for pattern in filter_patterns:
+                        if re.search(pattern, line):
+                            should_filter = True
+                            break
+                    if not should_filter:
+                        lines_list.append(line)
+                    tasks[task_id]["stdout"] = "".join(lines_list)
+            except Exception:
+                pass  # 流可能已被关闭
+            finally:
+                try:
+                    stream.close()
+                except Exception:
+                    pass
 
         stdout_thread = threading.Thread(
             target=read_stream, args=(proc.stdout, stdout_lines)
@@ -106,30 +128,43 @@ def run_goose_task(task_id, instruction):
         proc.stdin.write(instruction)
         proc.stdin.close()
 
-        proc.wait(timeout=GOOSE_TIMEOUT)
+        # 等待完成，超时后杀掉 docker exec 进程
+        # docker 会自动清理容器内的子进程
+        try:
+            proc.wait(timeout=GOOSE_TIMEOUT)
+        except subprocess.TimeoutExpired:
+            # 超时后杀掉 docker exec 进程
+            proc.kill()
+            proc.wait()  # 等待清理
 
-        stdout_thread.join()
-        stderr_thread.join()
+        stdout_thread.join(timeout=5)
+        stderr_thread.join(timeout=5)
 
         tasks[task_id]["status"] = "completed"
         tasks[task_id]["return_code"] = proc.returncode
         tasks[task_id]["completed_at"] = datetime.now().isoformat()
+        tasks[task_id]["finished"] = True
 
-        try:
-            output_files = os.listdir(OUTPUT_DIR)
-            tasks[task_id]["output_files"] = output_files
-        except Exception as e:
-            tasks[task_id]["output_files"] = []
-            tasks[task_id]["error"] = str(e)
+        # 立即释放锁和 active_task_id，不等线程清理
+        with task_lock:
+            active_task_id = None
+
+        # 后台线程清理（不阻塞）
+        stdout_thread.join(timeout=1)
+        stderr_thread.join(timeout=1)
 
     except subprocess.TimeoutExpired:
         tasks[task_id]["status"] = "timeout"
         tasks[task_id]["error"] = f"Task exceeded timeout of {GOOSE_TIMEOUT} seconds"
+        with task_lock:
+            active_task_id = None
+        tasks[task_id]["finished"] = True
     except Exception as e:
         tasks[task_id]["status"] = "failed"
         tasks[task_id]["error"] = str(e)
-
-    tasks[task_id]["finished"] = True
+        with task_lock:
+            active_task_id = None
+        tasks[task_id]["finished"] = True
 
 
 @app.route("/")
@@ -157,29 +192,69 @@ def execute():
     接收：{ "instruction": "自然语言指令" }
     返回：{ "task_id": "任务 ID" }
     """
+    global active_task_id
+
     data = request.get_json()
 
     if not data or "instruction" not in data:
         return jsonify({"error": "Missing instruction"}), 400
 
-    instruction = data["instruction"]
-    task_id = str(uuid.uuid4())
+    # 检查是否有任务正在运行
+    if not task_lock.acquire(blocking=False):
+        # 锁被占用，检查 active_task_id 是否有效
+        if active_task_id and active_task_id in tasks:
+            task = tasks[active_task_id]
+            if task.get("finished", False):
+                # 任务已完成但未清理，重置状态
+                active_task_id = None
+                task_lock.release()
+                # 重新尝试获取锁
+                if not task_lock.acquire(blocking=False):
+                    return jsonify({"error": "System busy, please retry"}), 503
+            else:
+                # 真的有其他任务在运行
+                return jsonify(
+                    {
+                        "error": "Another task is already running. Please wait for it to complete.",
+                        "active_task_id": active_task_id,
+                    }
+                ), 429
+        else:
+            # active_task_id 无效，清理
+            active_task_id = None
+            task_lock.release()
+            # 重新尝试获取锁
+            if not task_lock.acquire(blocking=False):
+                return jsonify({"error": "System busy, please retry"}), 503
 
-    # 初始化任务状态
-    tasks[task_id] = {
-        "task_id": task_id,
-        "instruction": instruction,
-        "status": "running",
-        "created_at": datetime.now().isoformat(),
-        "finished": False,
-    }
+    try:
+        instruction = data["instruction"]
+        task_id = str(uuid.uuid4())
+        active_task_id = task_id
 
-    # 异步执行任务
-    thread = threading.Thread(target=run_goose_task, args=(task_id, instruction))
-    thread.daemon = True
-    thread.start()
+        # 初始化任务状态
+        tasks[task_id] = {
+            "task_id": task_id,
+            "instruction": instruction,
+            "status": "running",
+            "created_at": datetime.now().isoformat(),
+            "finished": False,
+        }
 
-    return jsonify({"task_id": task_id, "status": "running", "message": "Task started"})
+        # 异步执行任务
+        thread = threading.Thread(target=run_goose_task, args=(task_id, instruction))
+        thread.daemon = True
+        thread.start()
+
+        # 启动线程后立即释放锁，任务状态由 run_goose_task 管理
+        task_lock.release()
+
+        return jsonify(
+            {"task_id": task_id, "status": "running", "message": "Task started"}
+        )
+    except Exception as e:
+        task_lock.release()
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/api/task/<task_id>", methods=["GET"])

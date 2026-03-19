@@ -1,7 +1,0 @@
-https://www.google.com
-https://www.github.com
-https://www.stackoverflow.com
-https://www.python.org
-https://docs.python.org
-https://httpbin.org
-https://jsonplaceholder.typicode.com

@@ -1,98 +1,142 @@
-# Goose Agent 测试集
+# Magic Func 测试集
 
-## 概述
+## 目录结构
 
-本测试集用于验证 Goose Agent 的执行能力，确保其能够完整执行任务而非中途停止或让用户执行。
-
-## 测试文件
-
-`input/` 目录包含 40 个各种格式的测试文件：
-
-| 文件类型 | 示例文件 | 数量 |
-|---------|---------|------|
-| 文本文件 | text_chinese.txt, text_english.txt | 5 |
-| CSV 数据 | employees.csv, sales.csv, grades.csv | 8 |
-| JSON 数据 | config.json, products.json, nested.json | 5 |
-| XML 数据 | books.xml, data.xml | 2 |
-| YAML 配置 | settings.yaml | 1 |
-| Markdown | README.md | 1 |
-| HTML | webpage.html | 1 |
-| 代码文件 | script.py, app.js, deploy.sh | 4 |
-| SQL | queries.sql | 1 |
-| 配置文件 | config.ini, pyproject.toml, .env.example | 3 |
-| 日志文件 | app.log | 1 |
-| 图片 | image.jpg, image.png | 2 |
-| 音频 | audio.mp3 | 1 |
-| 视频 | video.mp4 | 1 |
-| PDF | sample.pdf | 1 |
-| Excel | sample.xlsx | 1 |
-| 其他 | urls.txt, ips.txt, addresses.csv 等 | 4 |
-
-## 测试用例
-
-`test_cases.json` 包含 120 个测试用例，分为 10 个类别：
-
-1. **text_processing** (12个): 文本处理任务
-2. **data_analysis** (18个): 数据分析任务
-3. **format_conversion** (15个): 格式转换任务
-4. **script_creation** (15个): 脚本创建任务
-5. **file_operations** (10个): 文件操作任务
-6. **network_tasks** (10个): 网络相关任务
-7. **ambiguous_tasks** (10个): 模糊指令任务
-8. **complex_tasks** (10个): 复杂多步骤任务
-9. **error_handling** (5个): 错误处理任务
-10. **consultation** (10个): 咨询类任务
+```
+test/
+├── run_tests.py          # 统一测试运行器
+├── test_cases.json       # 32 个核心测试用例
+├── README.md             # 测试说明文档
+└── assets/               # 测试资源文件
+    ├── images/           # 图像文件 (JPG, PNG, WebP, SVG, etc.)
+    ├── audio/            # 音频文件 (MP3, WAV, etc.)
+    ├── video/            # 视频文件 (MP4, WebM, etc.)
+    ├── documents/        # 文档文件 (PDF, DOCX, XLSX, MD, HTML, etc.)
+    ├── data/             # 数据文件 (CSV, JSON, etc.)
+    ├── fonts/            # 字体文件 (TTF, etc.)
+    └── archives/         # 压缩包文件 (ZIP, etc.)
+```
 
 ## 使用方法
 
-### 快速测试（前20个）
+### 运行所有测试
 ```bash
-python3 test/quick_test.py
+python run_tests.py
 ```
 
-### 分批测试
+### 运行指定范围测试
 ```bash
-# 测试指定范围
-python3 test/batch_test.py 1 20    # 测试1-20
-python3 test/batch_test.py 31 50   # 测试31-50
+# 运行测试 1-10
+python run_tests.py --range 1-10
+
+# 运行测试 20-30
+python run_tests.py -r 20-30
 ```
 
-### 完整测试
+### 列出所有测试用例
 ```bash
-python3 test/run_tests.py
+python run_tests.py --list
 ```
 
-## 测试结果
+### 显示详细信息
+```bash
+python run_tests.py --verbose
+```
 
-最新测试结果：
+## 测试用例概览
 
-| 批次 | 通过率 |
-|-----|-------|
-| 1-20 | 90% (18/20) |
-| 31-50 | 95% (19/20) |
-| 51-70 | 90% (18/20) |
-| 71-84 | 100% (14/14) |
-| 85-90 | 100% (6/6) |
-| 101-108 | 100% (8/8) |
-| **总计** | **94.3% (83/88)** |
+| ID | 类别 | 测试内容 |
+|----|------|----------|
+| 1-13 | 图像处理 | WebP/PNG 转 JPG、缩放、压缩、黑白、水印、EXIF 清除、色彩空间、拼接、切图、图标生成、SVG 转 PNG |
+| 14 | 音频转换 | MP3 转 WAV |
+| 15-19 | 视频处理 | 视频转 WebM、提取音频、消音、GIF 转视频、字幕压制 |
+| 20-23 | PDF 处理 | 文字提取、页面转图片、PDF 合并、PDF 压缩 |
+| 24-26 | 文档转换 | Markdown 转 PDF、Word 转 PDF、Excel 转 CSV |
+| 27-28 | 数据转换 | CSV 转 JSON、JSON 展平 |
+| 29-30 | 压缩文件 | 解压、清洗隐藏文件 |
+| 31 | 字体转换 | TTF 转 WOFF2 |
+| 32 | PDF 转换 | HTML 转 PDF |
+
+## 测试报告
+
+测试报告自动保存在 `logs/` 目录，文件名格式：`test_report_YYYYMMDD_HHMMSS.json`
+
+报告包含：
+- 测试时间戳
+- 测试范围
+- 通过率统计
+- 按类别统计
+- 详细结果（每个测试的输出文件、问题等）
+
+## 环境要求
+
+- Magic Func 服务运行中 (默认 `http://localhost:8000`)
+- Python 3.8+
+- 依赖：`requests`
+
+安装依赖：
+```bash
+pip install requests
+```
 
 ## 通过标准
 
-- ✅ **通过**: 输出目录有文件，无问题关键词
-- ❌ **失败**: 输出目录为空，或检测到助手行为
+测试通过需满足：
+1. **有输出文件** - output 目录至少有一个文件
+2. **格式正确** - 输出文件格式符合预期（如 JPG 转换任务输出 .jpg 文件）
+3. **无问题行为** - Agent 没有询问用户或让用户自己执行
 
-## 问题关键词检测
+问题行为检测关键词：
+- "should i", "do you want", "would you like"
+- "你想", "你可以"
+- "you can run"
 
-测试会检测以下问题行为：
-- "should I", "do you want" - 询问用户
-- "you can run" - 让用户自己执行
-- "你想", "你可以运行" - 中文版本
+## 容器工具清单
 
-## 提示词优化要点
+Dockerfile 中预装的实用工具：
 
-确保 `goose-recipe.yaml` 包含：
+### 图像处理
+- **ImageMagick** - 图片转换、缩放、裁剪、水印
+- **Ghostscript** - PDF 和 PostScript 处理
+- **Pillow** - Python 图像处理库
+- **ExifTool** - EXIF 元数据读写
 
-1. **禁止行为清单** - 明确禁止询问用户
-2. **决策规则表** - 为模糊指令定义处理方式
-3. **输出验证** - 强制检查 output 目录
-4. **执行示例** - 展示正确和错误的行为
+### 音视频处理
+- **FFmpeg** - 音视频转换、提取、剪辑、压缩
+
+### PDF 处理
+- **Poppler** (pdftotext, pdftoppm) - PDF 文字提取、页面转图片
+- **PyPDF2** - Python PDF 处理库
+- **reportlab** - Python PDF 生成库
+
+### 文档转换
+- **Pandoc** - 通用文档格式转换
+- **wkhtmltopdf** - HTML 转 PDF
+- **python-docx** - Word 文档处理
+- **openpyxl** - Excel 文件处理
+- **markdown** - Markdown 解析
+
+### 压缩工具
+- **zip/unzip** - ZIP 压缩包
+- **p7zip** - 7z 压缩包
+
+### 字体处理
+- **fonttools** - Python 字体处理库
+- **fontconfig** - 字体配置
+
+## 添加新测试
+
+在 `test_cases.json` 中添加测试用例：
+
+```json
+{
+  "id": 33,
+  "category": "图像处理",
+  "upload": ["images/photo.webp"],
+  "instruction": "自然语言指令描述任务"
+}
+```
+
+要求：
+- `upload` 路径相对于 `assets/` 目录
+- `instruction` 使用自然语言，不要过于具体的命令

@@ -4,6 +4,11 @@ services:
     build: .
     container_name: magic-func-sandbox
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: '1.0'
     environment:
       - GOOSE_PROVIDER=openai
       - GOOSE_MODEL=${GOOSE_MODEL:-moonshotai/kimi-k2-instruct}
@@ -38,6 +43,11 @@ services:
       dockerfile: gateway/Dockerfile
     container_name: magic-func-gateway
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
     ports:
       - "${PORT:-8000}:8000"
     environment:

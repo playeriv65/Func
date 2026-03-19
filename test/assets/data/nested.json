@@ -1,0 +1,26 @@
+{
+  "company": "Test Corp",
+  "employees": [
+    {
+      "name": "Alice",
+      "age": 30,
+      "skills": [
+        "Python",
+        "JavaScript"
+      ]
+    },
+    {
+      "name": "Bob",
+      "age": 25,
+      "skills": [
+        "Java",
+        "C++"
+      ]
+    }
+  ],
+  "address": {
+    "street": "Main St",
+    "city": "Tech City",
+    "zip": "12345"
+  }
+}

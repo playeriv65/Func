@@ -1,9 +1,0 @@
-{
-  "products": [
-    {"id": "P001", "name": "Laptop", "category": "Electronics", "price": 999.99, "stock": 50},
-    {"id": "P002", "name": "Phone", "category": "Electronics", "price": 699.99, "stock": 100},
-    {"id": "P003", "name": "Desk", "category": "Furniture", "price": 299.99, "stock": 25},
-    {"id": "P004", "name": "Chair", "category": "Furniture", "price": 149.99, "stock": 40},
-    {"id": "P005", "name": "Book", "category": "Books", "price": 29.99, "stock": 200}
-  ]
-}

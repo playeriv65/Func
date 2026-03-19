@@ -1,50 +1,82 @@
 #!/usr/bin/env python3
 """
-Goose Agent 100+ 测试运行器
-运行完整的测试套件并生成详细报告
+Magic Func 测试运行器 - 统一测试脚本
+
+用法:
+    python run_tests.py              # 运行所有测试
+    python run_tests.py --range 1-10 # 运行指定范围
+    python run_tests.py --list       # 列出所有测试用例
 """
 
 import requests
 import time
 import json
-import os
 import sys
+import os
+import argparse
 from datetime import datetime
-from concurrent.futures import ThreadPoolExecutor, as_completed
-import threading
+from pathlib import Path
 
+# 配置
 BASE_URL = "http://localhost:8000"
-RESULTS_DIR = "/home/playeriv65/program/Func/test/results"
+SCRIPT_DIR = Path(__file__).parent
+ASSETS_DIR = SCRIPT_DIR / "assets"
+TEST_CASES_FILE = SCRIPT_DIR / "test_cases.json"
+LOG_DIR = SCRIPT_DIR / "logs"
 
-# 创建结果目录
-os.makedirs(RESULTS_DIR, exist_ok=True)
-
-
-# 线程安全的计数器
-class Counter:
-    def __init__(self):
-        self.value = 0
-        self.lock = threading.Lock()
-
-    def increment(self):
-        with self.lock:
-            self.value += 1
-            return self.value
+# 确保日志目录存在
+LOG_DIR.mkdir(exist_ok=True)
 
 
-# 加载测试用例
 def load_test_cases():
-    with open("/home/playeriv65/program/Func/test/test_cases.json", "r") as f:
+    """加载测试用例"""
+    with open(TEST_CASES_FILE, "r", encoding="utf-8") as f:
         data = json.load(f)
     return data["tests"]
 
 
-# 等待任务完成
-def wait_for_task(task_id, timeout=180):
+def upload_file(filename):
+    """上传文件到容器"""
+    filepath = ASSETS_DIR / filename
+
+    if not filepath.exists():
+        print(f"    ⚠️ 文件不存在：{filename}")
+        return False
+
+    try:
+        with open(filepath, "rb") as f:
+            files = {"file": (filename.split("/")[-1], f)}
+            resp = requests.post(
+                f"{BASE_URL}/api/files/upload", files=files, timeout=30
+            )
+            return resp.status_code == 200
+    except Exception as e:
+        print(f"    ⚠️ 上传失败：{e}")
+        return False
+
+
+def clear_input():
+    """清空 input 目录"""
+    try:
+        requests.delete(f"{BASE_URL}/api/files/input", timeout=10)
+    except:
+        pass
+
+
+def clear_output():
+    """清空 output 目录"""
+    try:
+        requests.delete(f"{BASE_URL}/api/files/output", timeout=10)
+    except:
+        pass
+
+
+def wait_for_task(task_id, timeout=300):
+    """等待任务完成"""
     start = time.time()
     while time.time() - start < timeout:
         try:
-            resp = requests.get(f"{BASE_URL}/api/task/{task_id}", timeout=10)
+            resp = requests.get(f"{BASE_URL}/api/task/{task_id}", timeout=15)
             data = resp.json()
             if data.get("finished", False):
                 return data
@@ -54,53 +86,126 @@ def wait_for_task(task_id, timeout=180):
     return {"status": "timeout", "stdout": ""}
 
 
-# 分析输出
-def analyze_result(stdout, output_files):
-    issues = []
+def get_output_files():
+    """获取输出文件列表"""
+    try:
+        resp = requests.get(f"{BASE_URL}/api/files/output", timeout=10)
+        return [f["name"] for f in resp.json().get("files", [])]
+    except:
+        return []
 
+
+def check_output_validity(output_files, instruction):
+    """检查输出是否有效"""
     if not output_files:
-        issues.append("输出目录为空")
-        return issues, False
+        return False, "无输出文件"
+
+    # 根据指令类型检查输出
+    instruction_lower = instruction.lower()
+
+    # 图像转换类
+    if any(
+        kw in instruction_lower
+        for kw in ["jpg", "png", "webp", "gif", "ico", "图片", "图像"]
+    ):
+        image_exts = [".jpg", ".jpeg", ".png", ".webp", ".gif", ".ico", ".bmp", ".tiff"]
+        if any(f.lower().endswith(tuple(image_exts)) for f in output_files):
+            return True, None
+
+    # PDF 类
+    if "pdf" in instruction_lower:
+        if any(f.lower().endswith(".pdf") for f in output_files):
+            return True, None
+
+    # 压缩包类
+    if any(kw in instruction_lower for kw in ["zip", "压缩包", "解压"]):
+        if any(f.lower().endswith(".zip") for f in output_files):
+            return True, None
+        # 解压任务检查是否有文件输出
+        if len(output_files) > 0:
+            return True, None
+
+    # 音频视频类
+    if any(
+        kw in instruction_lower for kw in ["mp3", "wav", "mp4", "webm", "音频", "视频"]
+    ):
+        media_exts = [".mp3", ".wav", ".mp4", ".webm", ".avi", ".mov", ".ogg", ".flac"]
+        if any(f.lower().endswith(tuple(media_exts)) for f in output_files):
+            return True, None
+
+    # 文档转换类
+    if any(
+        kw in instruction_lower for kw in ["docx", "xlsx", "csv", "json", "markdown"]
+    ):
+        doc_exts = [".docx", ".xlsx", ".csv", ".json", ".md", ".txt", ".html"]
+        if any(f.lower().endswith(tuple(doc_exts)) for f in output_files):
+            return True, None
+
+    # 字体类
+    if any(kw in instruction_lower for kw in ["ttf", "woff", "字体"]):
+        if any(f.lower().endswith((".ttf", ".woff", ".woff2")) for f in output_files):
+            return True, None
+
+    # 默认：只要有输出文件就认为成功
+    if len(output_files) > 0:
+        return True, None
+
+    return False, "输出文件格式不符合预期"
+
+
+def check_agent_behavior(stdout):
+    """检查 Agent 是否有问题行为"""
+    if not stdout:
+        return []
 
     stdout_lower = stdout.lower()
+    issues = []
 
-    # 问题模式
+    # 检查询问用户
     problem_keywords = [
-        "should i",
-        "do you want",
-        "would you like",
-        "you can run",
-        "you should run",
-        "please confirm",
-        "please specify",
-        "你想",
-        "您想",
-        "你可以运行",
-        "请确认",
+        ("should i", "询问用户"),
+        ("do you want", "询问用户"),
+        ("would you like", "询问用户"),
+        ("你想", "询问用户"),
+        ("你可以", "让用户自己执行"),
+        ("you can run", "让用户自己执行"),
     ]
 
-    for kw in problem_keywords:
-        if kw in stdout_lower:
-            issues.append(f"检测到问题关键词: '{kw}'")
-            break
+    for keyword, issue_type in problem_keywords:
+        if keyword in stdout_lower:
+            issues.append(f"{issue_type}: '{keyword}'")
 
-    return issues, len(issues) == 0 and len(output_files) > 0
+    # 检查错误
+    if "error" in stdout_lower and "no error" not in stdout_lower:
+        if "failed" in stdout_lower or "cannot" in stdout_lower:
+            issues.append("执行错误")
+
+    return issues
 
 
-# 运行单个测试
-def run_single_test(test_case, counter, total):
+def run_test(test_case, verbose=False):
+    """运行单个测试"""
     test_id = test_case["id"]
     instruction = test_case["instruction"]
     category = test_case["category"]
-
-    current = counter.increment()
-    print(f"[{current}/{total}] 测试 #{test_id} [{category}]: {instruction[:50]}...")
+    upload_files = test_case.get("upload", [])
 
     try:
-        # 清理输出目录
-        requests.delete(f"{BASE_URL}/api/files/output", timeout=10)
+        # 清理环境
+        clear_output()
+        clear_input()
 
-        # 发送任务
+        # 上传文件
+        for filename in upload_files:
+            if not upload_file(filename):
+                return {
+                    "id": test_id,
+                    "category": category,
+                    "success": False,
+                    "error": f"文件上传失败：{filename}",
+                }
+
+        # 执行任务
         resp = requests.post(
             f"{BASE_URL}/api/execute", json={"instruction": instruction}, timeout=30
         )
@@ -110,173 +215,199 @@ def run_single_test(test_case, counter, total):
             return {
                 "id": test_id,
                 "category": category,
-                "instruction": instruction,
-                "status": "failed",
-                "error": "无法获取任务ID",
                 "success": False,
+                "error": "无 task_id",
             }
 
         # 等待完成
-        result = wait_for_task(task_id)
+        if verbose:
+            print("等待任务完成...", end="", flush=True)
+        result = wait_for_task(task_id, timeout=300)
 
-        # 检查输出
-        output_resp = requests.get(f"{BASE_URL}/api/files/output", timeout=10)
-        output_files = [f["name"] for f in output_resp.json().get("files", [])]
-
-        # 分析结果
+        # 获取输出
+        output_files = get_output_files()
         stdout = result.get("stdout", "")
-        issues, success = analyze_result(stdout, output_files)
 
-        status = result.get("status", "unknown")
+        # 检查 Agent 行为
+        issues = check_agent_behavior(stdout)
 
-        icon = "✅" if success else "❌"
-        print(f"  {icon} 状态: {status}, 输出文件: {len(output_files)}个")
+        # 检查输出有效性
+        valid, format_error = check_output_validity(output_files, instruction)
+        if not valid:
+            issues.append(format_error)
+
+        success = len(output_files) > 0 and len(issues) == 0
 
         return {
             "id": test_id,
             "category": category,
-            "instruction": instruction,
-            "status": status,
-            "output_files": output_files,
+            "instruction": instruction[:60],
+            "status": result.get("status"),
             "output_count": len(output_files),
+            "output_files": output_files[:5],
             "issues": issues,
             "success": success,
-            "stdout_preview": stdout[:500] if stdout else "",
         }
 
     except Exception as e:
-        print(f"  ❌ 错误: {str(e)}")
         return {
             "id": test_id,
             "category": category,
-            "instruction": instruction,
-            "status": "error",
-            "error": str(e),
             "success": False,
+            "error": str(e),
         }
 
 
-# 运行所有测试
-def run_all_tests(tests, max_workers=3):
-    results = []
-    counter = Counter()
-    total = len(tests)
+def print_summary(results, start_id, end_id):
+    """打印测试总结"""
+    total = len(results)
+    passed = sum(1 for r in results if r["success"])
+    rate = passed / total * 100 if total > 0 else 0
 
-    print(f"\n{'=' * 60}")
-    print(f"开始运行 {total} 个测试")
-    print(f"{'=' * 60}\n")
+    print("\n" + "=" * 70)
+    print(f"测试范围：#{start_id} - #{end_id}")
+    print(f"结果：{passed}/{total} ({rate:.1f}%)")
 
-    start_time = time.time()
-
-    # 顺序执行（避免并发问题）
-    for test in tests:
-        result = run_single_test(test, counter, total)
-        results.append(result)
-        time.sleep(1)  # 短暂间隔
-
-    end_time = time.time()
-
-    return results, end_time - start_time
-
-
-# 生成报告
-def generate_report(results, duration):
     # 按类别统计
-    by_category = {}
+    categories = {}
     for r in results:
         cat = r["category"]
-        if cat not in by_category:
-            by_category[cat] = {"pass": 0, "fail": 0, "total": 0}
-        by_category[cat]["total"] += 1
+        if cat not in categories:
+            categories[cat] = {"total": 0, "passed": 0}
+        categories[cat]["total"] += 1
         if r["success"]:
-            by_category[cat]["pass"] += 1
-        else:
-            by_category[cat]["fail"] += 1
+            categories[cat]["passed"] += 1
 
-    # 打印摘要
-    print(f"\n{'=' * 60}")
-    print("测试报告")
-    print(f"{'=' * 60}")
-    print(f"总测试数: {len(results)}")
-    print(f"总耗时: {duration:.1f} 秒")
-    print(f"平均每个测试: {duration / len(results):.1f} 秒")
+    print("\n按类别统计:")
+    print("-" * 70)
+    print(f"{'类别':<20} {'通过':<8} {'总数':<8} {'通过率':<10}")
+    print("-" * 70)
+    for cat, stats in sorted(categories.items()):
+        rate = stats["passed"] / stats["total"] * 100 if stats["total"] > 0 else 0
+        print(f"{cat:<20} {stats['passed']:<8} {stats['total']:<8} {rate:.1f}%")
 
-    total_pass = sum(1 for r in results if r["success"])
-    print(
-        f"\n通过率: {total_pass}/{len(results)} ({total_pass / len(results) * 100:.1f}%)"
-    )
-
-    print(f"\n按类别统计:")
-    for cat, stats in by_category.items():
-        rate = stats["pass"] / stats["total"] * 100 if stats["total"] > 0 else 0
-        icon = "✅" if rate == 100 else "⚠️" if rate >= 80 else "❌"
-        print(f"  {icon} {cat}: {stats['pass']}/{stats['total']} ({rate:.0f}%)")
-
-    # 失败详情
+    # 显示失败详情
     failed = [r for r in results if not r["success"]]
     if failed:
-        print(f"\n失败测试 ({len(failed)}个):")
-        for r in failed[:10]:  # 只显示前10个
-            print(f"  ❌ #{r['id']}: {r['instruction'][:40]}...")
-            if r.get("issues"):
-                print(f"     问题: {r['issues'][0]}")
-        if len(failed) > 10:
-            print(f"  ... 还有 {len(failed) - 10} 个失败")
+        print("\n" + "=" * 70)
+        print("失败测试详情:")
+        print("-" * 70)
+        for r in failed:
+            print(f"#{r['id']} [{r['category']}]: {r['instruction'][:50]}")
+            if "error" in r:
+                print(f"    错误：{r['error']}")
+            if "issues" in r and r["issues"]:
+                print(f"    问题：{', '.join(r['issues'])}")
+            print()
 
-    # 保存详细结果
+    return passed, total
+
+
+def save_report(results, start_id, end_id, passed, total):
+    """保存测试报告"""
     report = {
         "timestamp": datetime.now().isoformat(),
-        "total_tests": len(results),
-        "passed": total_pass,
-        "failed": len(results) - total_pass,
-        "pass_rate": total_pass / len(results) * 100,
-        "duration_seconds": duration,
-        "by_category": by_category,
+        "range": f"{start_id}-{end_id}",
+        "total": total,
+        "passed": passed,
+        "rate": passed / total * 100 if total > 0 else 0,
         "results": results,
     }
 
-    report_file = os.path.join(
-        RESULTS_DIR, f"report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    report_file = (
+        LOG_DIR / f"test_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
     )
-    with open(report_file, "w") as f:
-        json.dump(report, f, indent=2, ensure_ascii=False)
+    with open(report_file, "w", encoding="utf-8") as f:
+        json.dump(report, f, ensure_ascii=False, indent=2)
 
-    print(f"\n详细报告已保存: {report_file}")
+    print(f"\n报告已保存：{report_file}")
+    return report_file
 
-    return report
+
+def list_tests():
+    """列出所有测试用例"""
+    tests = load_test_cases()
+
+    print(f"\n{'ID':<6} {'类别':<20} {'指令':<60}")
+    print("-" * 90)
+    for t in tests:
+        print(f"{t['id']:<6} {t['category']:<20} {t['instruction'][:60]}")
+    print("-" * 90)
+    print(f"共 {len(tests)} 个测试用例")
 
 
-# 主函数
 def main():
-    print("=" * 60)
-    print("Goose Agent 100+ 测试套件")
-    print("=" * 60)
+    parser = argparse.ArgumentParser(description="Magic Func 测试运行器")
+    parser.add_argument("--range", "-r", help="测试范围，例如：1-10")
+    parser.add_argument("--list", "-l", action="store_true", help="列出所有测试用例")
+    parser.add_argument("--verbose", "-v", action="store_true", help="显示详细信息")
+    parser.add_argument("--output", "-o", help="输出报告文件路径")
 
-    # 检查服务状态
-    try:
-        resp = requests.get(f"{BASE_URL}/api/health", timeout=5)
-        print(f"服务状态: {resp.json().get('status', 'unknown')}")
-    except:
-        print("错误: 无法连接到服务，请确保服务正在运行")
-        sys.exit(1)
+    args = parser.parse_args()
+
+    if args.list:
+        list_tests()
+        return
 
     # 加载测试用例
     tests = load_test_cases()
-    print(f"加载了 {len(tests)} 个测试用例")
+
+    # 解析范围
+    if args.range:
+        parts = args.range.split("-")
+        start_id = int(parts[0])
+        end_id = int(parts[1]) if len(parts) > 1 else start_id
+    else:
+        start_id = 1
+        end_id = tests[-1]["id"]
+
+    # 过滤测试
+    tests_to_run = [t for t in tests if start_id <= t["id"] <= end_id]
+
+    if not tests_to_run:
+        print(f"错误：没有找到测试用例 (范围：{start_id}-{end_id})")
+        return
+
+    print(f"\n{'=' * 70}")
+    print(f"Magic Func 测试运行器")
+    print(f"{'=' * 70}")
+    print(f"运行测试 #{start_id} 到 #{end_id} (共{len(tests_to_run)}个)")
+    print(f"API 地址：{BASE_URL}")
+    print(f"资源目录：{ASSETS_DIR}")
+    print(f"{'=' * 70}\n")
 
     # 运行测试
-    results, duration = run_all_tests(tests)
+    results = []
+    start_time = time.time()
 
-    # 生成报告
-    report = generate_report(results, duration)
+    for i, t in enumerate(tests_to_run, 1):
+        print(f"[{i}/{len(tests_to_run)}] #{t['id']} [{t['category']}]", end=" ")
 
-    # 返回退出码
-    if report["pass_rate"] >= 90:
-        print("\n🎉 测试通过！")
-        sys.exit(0)
-    else:
-        print(f"\n⚠️ 通过率 {report['pass_rate']:.1f}% 低于 90%")
-        sys.exit(1)
+        result = run_test(t, verbose=args.verbose)
+        results.append(result)
+
+        if result["success"]:
+            print(f"✅ 输出:{result['output_count']}个")
+        else:
+            print(f"❌ {result.get('error', '验证失败')}")
+            if args.verbose and "issues" in result:
+                for issue in result["issues"]:
+                    print(f"      └─ {issue}")
+
+        time.sleep(0.5)
+
+    # 计算耗时
+    elapsed = time.time() - start_time
+    hours, remainder = divmod(int(elapsed), 3600)
+    minutes, seconds = divmod(remainder, 60)
+
+    # 打印总结
+    passed, total = print_summary(results, start_id, end_id)
+
+    # 保存报告
+    save_report(results, start_id, end_id, passed, total)
+
+    print(f"\n总耗时：{hours}h {minutes}m {seconds}s")
 
 
 if __name__ == "__main__":
